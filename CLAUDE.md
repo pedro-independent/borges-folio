@@ -1,6 +1,6 @@
 # Project Starter Kit — Nuxt 4 + Sanity + Figma + Fluid CSS + GSAP
 
-A reusable blueprint distilled from the Teixeira Duarte build. Drop this file at the
+A reusable blueprint. Drop this file at the
 root of a fresh Nuxt project, rename it `CLAUDE.md`, and hand it to Claude Code to
 scaffold the foundation. It captures the **exact** conventions: the fluid `em`
 scaling system, the single global stylesheet, the `useGSAP()` composable, the
