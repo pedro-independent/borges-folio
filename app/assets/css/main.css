@@ -1,0 +1,482 @@
+/* ============================================================
+   Pedro Borges — portfolio
+   Single global stylesheet. Section order:
+   resets → fonts → tokens → scaling → typography → links →
+   layout primitives → buttons → nav → footer → page sections →
+   responsive overrides.
+   Everything is sized in `em`; px read off the 1440 Figma frame ÷ 16.
+   ============================================================ */
+
+/* === RESETS ================================================ */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body, h1, h2, h3, h4, p, figure, blockquote, dl, dd, ul, ol {
+  margin: 0;
+  padding: 0;
+}
+ul, ol { list-style: none; }
+img, svg, video { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+/* === FONTS =================================================
+   Commercial faces (Pangram Pangram "Neue Montreal" + "Aeonik Mono").
+   Drop the licensed .woff2 files into /public/fonts to activate;
+   until then the fallback stack renders so the layout is intact. */
+@font-face {
+  font-family: 'Neue Montreal';
+  src: url('/fonts/NeueMontreal-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neue Montreal';
+  src: url('/fonts/NeueMontreal-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Aeonik Mono';
+  src: url('/fonts/AeonikMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* === DESIGN TOKENS ========================================= */
+:root {
+  /* Brand palette — names mirror the Figma values */
+  --color-cream: #e8e4db;       /* page background */
+  --color-ink: #060606;         /* foreground / text */
+  --color-off-white: #fafafa;   /* light text / light button */
+  --color-blue: #0023e2;        /* electric-blue accent */
+  --color-lavender: #ceb9f3;    /* project card background */
+
+  /* Semantic aliases (default light theme) */
+  --color-bg: var(--color-cream);
+  --color-fg: var(--color-ink);
+  --color-accent: var(--color-blue);
+  --color-line: rgba(6, 6, 6, 0.2);
+
+  --font-display: 'Neue Montreal', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Aeonik Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+[data-page-theme='dark'] {
+  --color-bg: var(--color-ink);
+  --color-fg: var(--color-off-white);
+}
+
+/* === SCALING SYSTEM ========================================
+   Fluid root font-size: one unit scales with the viewport so every
+   `em` tracks the 1440 design 1:1. Below 992px it holds the desktop
+   scale (this build targets the desktop breakpoint). */
+:root {
+  --size-unit: 16;               /* body font-size in the design */
+  --size-container-ideal: 1440;  /* desktop design width */
+  --size-container-min: 992px;   /* fluid floor */
+  --size-container-max: 1920px;
+  --size-container: clamp(var(--size-container-min), 100vw, var(--size-container-max));
+  --size-font: calc(var(--size-container) / (var(--size-container-ideal) / var(--size-unit)));
+}
+
+body {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--size-font);
+  line-height: 1.2;
+  color: var(--color-fg);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* === LAYOUT PRIMITIVES ===================================== */
+.container {
+  width: 100%;
+  max-width: var(--size-container);
+  margin: 0 auto;
+  padding: 0 1.5em; /* 24px @ 1440 — the Figma gutter */
+}
+
+.page { position: relative; overflow: clip; }
+main { display: block; }
+
+/* === TYPOGRAPHY UTILITIES =================================
+   Names mirror the role of each Figma text style; sizes in `em`. */
+.t-display-xl { font-size: 15em;   line-height: 1;   letter-spacing: -0.02em; } /* 240px — "My portfolio" */
+.t-display-l  { font-size: 14em;   line-height: 1.1; letter-spacing: -0.02em; } /* 224px — "About me" */
+.t-display-m  { font-size: 4em;    line-height: 1.1; }                          /* 64px  — industries list */
+.t-h1         { font-size: 2.5em;  line-height: 1.1; }                          /* 40px  — hero / intro / contact */
+.t-body       { font-size: 1.25em; line-height: 1.4; }                          /* 20px  — hero paragraph */
+.t-base       { font-size: 1em;    line-height: 1.1; }                          /* 16px  */
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 0.75em;               /* 12px */
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* === BUTTONS =============================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5em;                   /* 40px */
+  padding: 0 1em;                  /* 16px */
+  border-radius: 0.25em;           /* 4px */
+  border: 1px solid transparent;
+  font-weight: 500;
+  font-size: 1em;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+}
+.btn:hover { opacity: 0.82; }
+.btn--light { background: var(--color-off-white); color: var(--color-ink); }
+.btn--dark  { background: var(--color-ink); color: var(--color-off-white); }
+.btn--ghost { background: transparent; color: var(--color-ink); border-color: var(--color-line); }
+.btn--ghost:hover { opacity: 1; background: var(--color-ink); color: var(--color-off-white); }
+
+/* === GLOBAL NAV =========================================== */
+.nav {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25em;
+  padding: 1.5em;                  /* 24px */
+}
+.nav__logo {
+  flex: 1 0 0;
+  min-width: 0;
+  padding: 0 0.125em;
+}
+.nav__logo img {
+  width: 100%;
+  height: auto;
+}
+.nav__right {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  width: 21.5625em;                /* 345px */
+  flex-shrink: 0;
+}
+.nav__menu {
+  flex: 1 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.9375em;                   /* 15px */
+  color: var(--color-off-white);
+}
+.nav__menu-label { font-weight: 500; }
+.nav__menu-toggle {
+  display: flex;
+  align-items: center;
+  padding: 0.5em;                  /* 8px */
+  background: var(--color-blue);
+  border-radius: 1.5em;            /* 24px */
+}
+.nav__cta { flex: 1 0 0; display: flex; justify-content: flex-end; }
+
+/* dots icon */
+.icon-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.375em;                    /* 6px */
+  width: 1.5em;
+  height: 1.5em;
+  justify-content: center;
+}
+.icon-dots span {
+  width: 0.25em;                   /* 4px */
+  height: 0.25em;
+  background: var(--color-off-white);
+  border-radius: 50%;
+}
+
+/* === FOOTER =============================================== */
+.footer { padding-top: 7.5em; }     /* 120px */
+.footer__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 5em;                         /* 80px */
+}
+.footer__links {
+  display: flex;
+  gap: 11.125em;                    /* 178px */
+  align-items: flex-end;
+}
+.footer__links-col { width: 16.125em; } /* 258px */
+.footer__links a { display: block; line-height: 1.1; }
+.footer__links a:hover { opacity: 0.55; }
+.footer__bottom {
+  display: flex;
+  gap: 0.25em;
+  align-items: flex-end;
+}
+.footer__wordmark {
+  position: relative;
+  flex-shrink: 0;
+  width: 59.75em;                   /* 956px */
+  height: 15.375em;                 /* 246px */
+  overflow: hidden;
+}
+.footer__wordmark p {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+}
+.footer__wordmark .is-muted { opacity: 0.3; }
+.footer__wordmark-clip {
+  position: absolute;
+  inset: 0;
+  width: 21.8125em;                 /* 349px solid reveal */
+  overflow: hidden;
+}
+.footer__photo {
+  flex-shrink: 0;
+  width: 16.125em;                  /* 258px */
+  padding: 2em 0;                   /* 32px */
+}
+.footer__photo-frame {
+  height: 9.125em;                  /* 146px */
+  border-radius: 0.25em;
+  overflow: hidden;
+  /* placeholder until the real portrait / Sanity image is wired in */
+  background:
+    linear-gradient(135deg, #c9c4ba 0%, #b6b1a6 100%);
+}
+.footer__photo-frame img { width: 100%; height: 100%; object-fit: cover; object-position: bottom; }
+.footer__arrow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 2em 0;
+}
+.footer__arrow svg { width: 10.625em; height: 10.625em; } /* 170px */
+
+/* === PAGE: HERO =========================================== */
+.hero {
+  position: relative;
+  min-height: 48.125em;             /* 770px */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4.125em;                     /* 66px */
+  padding: 10.3125em 1.5em;         /* 165px / 24px */
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* placeholder portrait backdrop — swap for the real hero image / Sanity asset */
+  background:
+    radial-gradient(120% 90% at 70% 20%, #4a4a4a 0%, #2a2a2a 45%, #161616 100%);
+}
+.hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: bottom; }
+.hero__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 6, 6, 0.32);
+}
+.hero__h1 {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  color: var(--color-off-white);
+}
+.hero__h1-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625em;                     /* 10px @ base 16px */
+  width: 37.9375em;                 /* 607px @ base 16px */
+}
+.hero__h1-lines p:nth-child(2) { text-align: right; }
+.hero__paragraph {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 5.4375em;              /* 87px */
+}
+.hero__paragraph-box {
+  width: 16.125em;                  /* 258px @ base 16px */
+  color: var(--color-off-white);
+}
+
+/* === PAGE: INTRO ========================================== */
+.intro {
+  padding: 15em 1.5em 7.5em;        /* 240 / 120 */
+  text-align: center;
+}
+.intro__box {
+  max-width: 18.25em;               /* 292px @ base 16px */
+  margin: 0 auto;
+}
+
+/* === PAGE: PORTFOLIO ====================================== */
+.portfolio { padding-bottom: 7.5em; }
+.portfolio__title {
+  text-align: center;
+  white-space: nowrap;
+  margin-bottom: -6em;              /* -96px overlap into the rows */
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+.portfolio__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+.project {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5.6875em;                    /* 91px */
+}
+.project__spacer {
+  flex: 1 0 0;
+  min-width: 0;
+}
+.project__media {
+  flex-shrink: 0;
+  width: 32.5em;                    /* 520px */
+  height: 24.5em;                   /* 392px */
+  border-radius: 0.25em;
+  overflow: hidden;
+}
+.project__media img { width: 100%; height: 100%; object-fit: cover; }
+.project__media--blank { background: var(--color-off-white); }
+.project__media--lavender { background: var(--color-lavender); }
+.project__meta {
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;                       /* 8px */
+}
+.project__meta--right { /* default left align matches Figma */ }
+.project__name { line-height: 1.1; }
+.project__desc { line-height: 1.1; opacity: 0.4; }
+.project__role { opacity: 0.4; }
+
+/* MEO phone mockup card */
+.project__phone {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.project__phone-inner {
+  position: relative;
+  width: 9.85em;                    /* ~157px device */
+  height: 20em;                     /* 320px */
+  margin-top: 2.4em;
+}
+.project__phone-screen {
+  position: absolute;
+  inset: 4% 6%;
+  border-radius: 1.6em;
+  overflow: hidden;
+}
+.project__phone-screen img { width: 100%; height: 100%; object-fit: cover; }
+.project__phone-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.portfolio__cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 2.5em;
+}
+
+/* === PAGE: INDUSTRIES ===================================== */
+.industries { padding: 0 1.5em; }
+.industries__row {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1em 5.4375em;            /* 16px / 87px */
+  border-top: 1px solid var(--color-line);
+}
+.industries__aside {
+  width: 16.125em;                  /* 258px */
+  line-height: 1.1;
+}
+.industries__list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;                       /* 8px @ base 16px */
+  width: 32.5em;                    /* 520px @ base 16px */
+  height: 48.125em;                 /* 770px @ base 16px */
+  padding: 0 1em;
+  overflow: hidden;
+}
+.industries__list li {
+  white-space: nowrap;
+  font-size: 4em;                   /* 64px */
+  line-height: 1.1;
+}
+/* fade-out stack mirroring the Figma opacity ramp */
+.industries__list li:nth-child(1) { opacity: 0.50; }
+.industries__list li:nth-child(2) { opacity: 0.40; }
+.industries__list li:nth-child(3) { opacity: 0.30; }
+.industries__list li:nth-child(4) { opacity: 0.20; }
+.industries__list li:nth-child(5) { opacity: 0.12; }
+.industries__list li:nth-child(6) { opacity: 0.07; }
+.industries__list li:nth-child(n+7) { opacity: 0.04; }
+/* top gradient mask: cream fading down over the first items */
+.industries__list::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 7.0625em;                 /* 113px */
+  background: linear-gradient(to bottom, var(--color-cream) 0%, rgba(232, 228, 219, 0) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* === PAGE: CONTACT ======================================== */
+.contact {
+  padding: 7.5em 1.5em 0;
+  text-align: center;
+}
+.contact__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2em;                         /* 32px */
+  max-width: 32.5em;                /* 520px */
+  margin: 0 auto;
+}
+.contact__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;                         /* 16px */
+}
+.contact__heading h2 { line-height: 1.1; }
+
+/* === RESPONSIVE (layout-shape only; sizes re-scale via root) ===
+   This build targets the desktop frame. Tiers can be added here. */
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}

@@ -1,0 +1,17 @@
+# Nuxt / Nitro
+.nuxt
+.output
+.data
+dist
+
+# deps
+node_modules
+
+# local env
+.env
+.env.local
+
+# misc
+.DS_Store
+*.log
+.cache
