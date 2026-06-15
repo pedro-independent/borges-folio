@@ -16,30 +16,65 @@ html, body, h1, h2, h3, h4, p, figure, blockquote, dl, dd, ul, ol {
   margin: 0;
   padding: 0;
 }
+/* Headings inherit size/weight — everything is sized via the .t-* utilities,
+   so the UA's 2em/bold defaults must not leak into em-based positioning. */
+h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
 ul, ol { list-style: none; }
 img, svg, video { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 
+body{
+	overscroll-behavior: none;
+}
+
+/* Hide native scrollbars site-wide — Lenis drives scrolling (content still scrolls). */
+html { -ms-overflow-style: none; scrollbar-width: none; }
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-img="render"] {
+	image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+}
+
+::selection {
+	background: var(--color-blue);
+	color: var(--color-off-white);
+	text-shadow: none;
+}
+
+input,
+textarea,
+select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none; border-radius: 0; 
+	background-image: none; 
+}
+
+/* === CURSOR ================================================
+   Single brand cursor everywhere — set on html, inherited by all. */
+html { cursor: var(--cursor); }
+*, *::before, *::after { cursor: inherit; }
+
 /* === FONTS =================================================
-   Commercial faces (Pangram Pangram "Neue Montreal" + "Aeonik Mono").
-   Drop the licensed .woff2 files into /public/fonts to activate;
-   until then the fallback stack renders so the layout is intact. */
+   Self-hosted faces in /public/fonts. PP Neue Montreal is the
+   primary type; GFY Palmer is the script accent. */
 @font-face {
-  font-family: 'Neue Montreal';
-  src: url('/fonts/NeueMontreal-Regular.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-Regular.woff2') format('woff2');
+  font-weight: 400 500;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Neue Montreal';
-  src: url('/fonts/NeueMontreal-Medium.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Aeonik Mono';
-  src: url('/fonts/AeonikMono-Regular.woff2') format('woff2');
+  font-family: 'GFY Palmer';
+  src: url('/fonts/GFY Palmer W00 Reg.woff2') format('woff2');
   font-weight: 400;
   font-display: swap;
 }
@@ -59,8 +94,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   --color-accent: var(--color-blue);
   --color-line: rgba(6, 6, 6, 0.2);
 
-  --font-display: 'Neue Montreal', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'Aeonik Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-display: 'PP Neue Montreal', 'Helvetica Neue', Arial, sans-serif;
+  --font-script: 'GFY Palmer', cursive;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Brand cursor — inline SVG arrow, hotspot at the tip (top-left). */
+  --cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='18' viewBox='0 0 15 18' fill='none'%3E%3Cpath d='M0.671143 0.985809L3.17114 15.9858L6.67114 10.4858L13.1711 8.48581L0.671143 0.985809Z' fill='%23FAFAFA' stroke='%23060606'/%3E%3C/svg%3E") 1 1, auto;
 }
 
 [data-page-theme='dark'] {
@@ -79,6 +118,24 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   --size-container-max: 1920px;
   --size-container: clamp(var(--size-container-min), 100vw, var(--size-container-max));
   --size-font: calc(var(--size-container) / (var(--size-container-ideal) / var(--size-unit)));
+}
+
+/* Tablet tier — Figma 768 frame; 480–991px. `em` tracks the 768 design 1:1 at
+   768px, scaling up toward 991px and fluidly down to 480px. */
+@media (min-width: 480px) and (max-width: 991px) {
+  :root {
+    --size-container-ideal: 768;
+    --size-container-min: 480px;
+    --size-container-max: 991px;
+  }
+}
+/* Mobile tier — Figma 390 frame; 479px down. */
+@media (max-width: 479px) {
+  :root {
+    --size-container-ideal: 390;
+    --size-container-min: 320px;
+    --size-container-max: 479px;
+  }
 }
 
 body {
@@ -105,7 +162,7 @@ main { display: block; }
 
 /* === TYPOGRAPHY UTILITIES =================================
    Names mirror the role of each Figma text style; sizes in `em`. */
-.t-display-xl { font-size: 15em;   line-height: 1;   letter-spacing: -0.02em; } /* 240px — "My portfolio" */
+.t-display-xl { font-size: 15em;   line-height: 1; } /* 240px — "My portfolio" */
 .t-display-l  { font-size: 14em;   line-height: 1.1; letter-spacing: -0.02em; } /* 224px — "About me" */
 .t-display-m  { font-size: 4em;    line-height: 1.1; }                          /* 64px  — industries list */
 .t-h1         { font-size: 2.5em;  line-height: 1.1; }                          /* 40px  — hero / intro / contact */
@@ -142,7 +199,7 @@ main { display: block; }
 
 /* === GLOBAL NAV =========================================== */
 .nav {
-  position: absolute;
+  position: fixed;
   inset: 0 0 auto 0;
   z-index: 10;
   display: flex;
@@ -151,13 +208,23 @@ main { display: block; }
   padding: 1.5em;                  /* 24px */
 }
 .nav__logo {
-  flex: 1 0 0;
-  min-width: 0;
+  width: 9.55em;                   /* 152.78px — default (small) logo */
   padding: 0 0.125em;
 }
 .nav__logo img {
   width: 100%;
   height: auto;
+  display: block;
+  transform-origin: left top;      /* both states share top-left anchor */
+  will-change: transform;
+}
+/* Home only: logo starts big and shrinks on scroll (scrubbed in AppNav.vue).
+   Large screens only; the SSR scale here prevents a small→big flash on load. */
+@media (min-width: 992px) {
+  .nav--home .nav__logo img { transform: scale(6.97); } /* desktop: 1037 / 148.78 */
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .nav--home .nav__logo img { transform: scale(3.41); } /* tablet: 519 / 152 */
 }
 .nav__right {
   display: flex;
@@ -165,6 +232,7 @@ main { display: block; }
   gap: 0.25em;
   width: 21.5625em;                /* 345px */
   flex-shrink: 0;
+  margin-left: auto;               /* pin to the right now the logo no longer flex-grows */
 }
 .nav__menu {
   flex: 1 0 0;
@@ -181,6 +249,7 @@ main { display: block; }
   padding: 0.5em;                  /* 8px */
   background: var(--color-blue);
   border-radius: 1.5em;            /* 24px */
+  transition: transform 0.3s ease; /* subtle shrink on hover (see below) */
 }
 .nav__cta { flex: 1 0 0; display: flex; justify-content: flex-end; }
 
@@ -192,13 +261,55 @@ main { display: block; }
   width: 1.5em;
   height: 1.5em;
   justify-content: center;
+  /* stage 2 — grow the merged square (on close it shrinks with the un-round) */
+  transition: transform 0.3s ease 0s;
 }
 .icon-dots span {
   width: 0.25em;                   /* 4px */
   height: 0.25em;
   background: var(--color-off-white);
-  border-radius: 50%;
+  /* stage 1 transform (merge) + stage 3 border-radius (round).
+     Close delays: un-round first (0s), separate last (0.3s). */
+  transition: transform 0.3s ease 0.3s, border-radius 0.3s ease 0s;
 }
+
+/* Menu hover, three stages (0.9s): the outer dots slide into the centre (one
+   square) → the merged square grows to 1.25em → it rounds into a circle.
+   Reverses in the right order on mouse-out via the staggered delays.
+   (0.25em dot + 0.375em gap = 0.625em to centre; 0.25em × 5 = 1.25em.) */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .nav__menu:is(:hover, :focus-visible) .icon-dots span:first-child {
+    transform: translateX(0.625em);
+  }
+  .nav__menu:is(:hover, :focus-visible) .icon-dots span:last-child {
+    transform: translateX(-0.625em);
+  }
+  .nav__menu:is(:hover, :focus-visible) .icon-dots {
+    transform: scale(5);              /* stage 2: grow */
+    transition-delay: 0.3s;
+  }
+  .nav__menu:is(:hover, :focus-visible) .icon-dots span {
+    border-radius: 50%;              /* stage 3: round */
+    transition-delay: 0s, 0.3s;      /* merge now, round after the grow */
+  }
+  /* the blue circle shrinks 2.5em → 2em to accent the motion */
+  .nav__menu:is(:hover, :focus-visible) .nav__menu-toggle {
+    transform: scale(0.8);
+  }
+}
+
+/* === NAV THEME (Osmo "Check Section Theme on Scroll") ======
+   <body> carries `data-theme-nav`, mirrored from the section under the nav's
+   mid-line by theme-scroll.client.js. "dark" section → light nav (the wordmark
+   is #FAFAFA, so it stays white); "light" section → dark nav (filter flips the
+   wordmark to near-black and the CTA to the dark variant). */
+.nav__logo img,
+.nav__menu { transition: color 0.3s ease, filter 0.3s ease; }
+
+[data-theme-nav="dark"] .nav__menu { color: var(--color-off-white); }
+
+[data-theme-nav="light"] .nav__menu { color: var(--color-ink); }
+[data-theme-nav="light"] .nav__logo img { filter: brightness(0); }
 
 /* === FOOTER =============================================== */
 .footer { padding-top: 7.5em; }     /* 120px */
@@ -212,13 +323,24 @@ main { display: block; }
   gap: 11.125em;                    /* 178px */
   align-items: flex-end;
 }
-.footer__links-col { width: 16.125em; } /* 258px */
+.footer__links-col {
+  width: 16.125em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+} 
 .footer__links a { display: block; line-height: 1.1; }
-.footer__links a:hover { opacity: 0.55; }
+/* "About me" CTA — a left→right fill drives both the wordmark and the arrow
+   from 30% to 100% opacity. --wm-fill / --ar-fill (0→1) are animated by
+   AppFooter.vue and read by the clipped overlay layers below. */
 .footer__bottom {
   display: flex;
   gap: 0.25em;
   align-items: flex-end;
+  color: inherit;
+  text-decoration: none;
+  --wm-fill: 0;
+  --ar-fill: 0;
 }
 .footer__wordmark {
   position: relative;
@@ -233,12 +355,9 @@ main { display: block; }
   top: 0;
   white-space: nowrap;
 }
-.footer__wordmark .is-muted { opacity: 0.3; }
-.footer__wordmark-clip {
-  position: absolute;
-  inset: 0;
-  width: 21.8125em;                 /* 349px solid reveal */
-  overflow: hidden;
+.footer__wordmark .is-muted { opacity: 0.3; }            /* base layer */
+.footer__wordmark-fill {                                  /* full-opacity reveal, wiped L→R */
+  clip-path: inset(0 calc((1 - var(--wm-fill)) * 100%) 0 0);
 }
 .footer__photo {
   flex-shrink: 0;
@@ -249,68 +368,152 @@ main { display: block; }
   height: 9.125em;                  /* 146px */
   border-radius: 0.25em;
   overflow: hidden;
-  /* placeholder until the real portrait / Sanity image is wired in */
   background:
-    linear-gradient(135deg, #c9c4ba 0%, #b6b1a6 100%);
+    linear-gradient(135deg, #c9c4ba 0%, #b6b1a6 100%); /* fallback while the image loads */
 }
-.footer__photo-frame img { width: 100%; height: 100%; object-fit: cover; object-position: bottom; }
+.footer__photo-frame img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.footer__photo-tint { width: 100%; height: 100%; } /* "Next up" project cover placeholder (tint) */
 .footer__arrow {
+  position: relative;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
+  width: 10.625em;                  /* 170px */
   padding: 2em 0;
 }
-.footer__arrow svg { width: 10.625em; height: 10.625em; } /* 170px */
+.footer__arrow-layer { display: block; width: 10.625em; height: 10.625em; }
+.footer__arrow-layer svg { width: 100%; height: 100%; }
+.footer__arrow-layer--base { opacity: 0.3; }             /* base layer */
+.footer__arrow-layer--fill {                             /* full-opacity reveal, wiped L→R */
+  position: absolute;
+  top: 2em;
+  left: 0;
+  clip-path: inset(0 calc((1 - var(--ar-fill)) * 100%) 0 0);
+}
+/* Reduced motion: no auto-fill/redirect — show the CTA at full opacity. */
+@media (prefers-reduced-motion: reduce) {
+  .footer__bottom { --wm-fill: 1; --ar-fill: 1; }
+}
 
-/* === PAGE: HERO =========================================== */
+/* === PAGE: HERO ===========================================
+   Coordinates are read off the 1440 Figma frame (px ÷ 16 = em) and
+   anchored to the hero's top-left, so the headline, paragraph and the
+   blue annotation layer all scale together with the viewport width. */
 .hero {
   position: relative;
-  min-height: 48.125em;             /* 770px */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 4.125em;                     /* 66px */
-  padding: 10.3125em 1.5em;         /* 165px / 24px */
-  overflow: hidden;
+  height: 100svh;
+  min-height: 50em;                 /* keep the composition from collapsing on short screens */
+  /* Visible so the bottom annotation can spill onto the cream below (its Figma
+     position is past the 770 frame); its y is width-derived while the hero
+     height is svh, so on short/wide viewports it sits below the fold. */
+  overflow: visible;
   isolation: isolate;
 }
 .hero__bg {
   position: absolute;
   inset: 0;
   z-index: -1;
-  /* placeholder portrait backdrop — swap for the real hero image / Sanity asset */
   background:
     radial-gradient(120% 90% at 70% 20%, #4a4a4a 0%, #2a2a2a 45%, #161616 100%);
 }
-.hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: bottom; }
+.hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .hero__bg::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(6, 6, 6, 0.32);
 }
+
+/* Headline — 607px column, upper-left; the middle line is right-aligned (Figma). */
 .hero__h1 {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  color: var(--color-off-white);
-}
-.hero__h1-lines {
+  position: absolute;
+  left: 1.5em;                      /* 24px */
+  top: 14.6875em;                   /* 235px */
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.625em;                     /* 10px @ base 16px */
-  width: 37.9375em;                 /* 607px @ base 16px */
-}
-.hero__h1-lines p:nth-child(2) { text-align: right; }
-.hero__paragraph {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 5.4375em;              /* 87px */
-}
-.hero__paragraph-box {
-  width: 16.125em;                  /* 258px @ base 16px */
+  gap: 0.625em;                     /* 10px */
+  width: 37.9375em;                 /* 607px */
   color: var(--color-off-white);
 }
+.hero__h1 .t-h1 { line-height: 1.2; } /* 48px line box */
+.hero__h1 .hero__h1-indent { text-align: right; }
+
+/* Intro paragraph — lower-right box. */
+.hero__paragraph {
+  position: absolute;
+  left: 66.9375em;                  /* 1071px */
+  top: 29.0625em;                   /* 465px */
+  width: 16.125em;                  /* 258px */
+  z-index: 2;
+  color: var(--color-off-white);
+}
+
+/* === ANNOTATIONS (hand-drawn marker layer) =================
+   Reusable overlay used by hero / portfolio / industries. Each layer is
+   absolutely positioned over a `position: relative` section; marks are placed
+   with Figma frame coordinates (px ÷ 16 = em) so they scale with the viewport.
+   Desktop-only — a large-screen flourish. */
+.anno {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  color: var(--color-blue);
+}
+.anno__svg {
+  position: absolute;
+  overflow: visible;
+}
+.anno__svg path {
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+}
+/* Outer element positions in body-em; inner <p> carries the 32px script type +
+   rotation, so the offsets don't compound with the larger font-size. */
+.anno__note { position: absolute; }
+.anno__note p {
+  font-family: var(--font-script);
+  font-weight: 400;
+  font-size: 2em;                   /* 32px */
+  line-height: 0.94;                /* ~30px */
+  color: var(--color-blue);
+  transform-origin: left top;
+}
+
+@media (max-width: 991px) {
+  .anno { display: none; }
+}
+
+/* --- Hero marks --- */
+.anno__svg--hero { top: 0; left: 0; width: 100%; height: auto; }
+.anno__note--hero-whitespace  { top: 11.5em;   left: 10.4375em; }  /* 184 / 167 */
+.anno__note--hero-focus       { top: 33.25em;  left: 5em; }        /* 532 / 80 */
+.anno__note--hero-composition { top: 51.125em; left: 68.5em; }     /* 818 / 1096 */
+.anno__note--hero-whitespace p,
+.anno__note--hero-focus p,
+.anno__note--hero-composition p { transform: rotate(-2.39deg); }
+
+/* --- Portfolio marks (Figma frame 48095811) ---
+   The "dramatic" group is anchored to the "My portfolio" wordmark, the rest to
+   the first project card (the two have slightly different rhythm than Figma). */
+.anno--portfolio { top: 0; }
+.anno__note--pf-dramatic      { left: 9.05em;   top: -4.35em; }  /* above the wordmark */
+.anno__svg--pf-dramatic-arrow { left: 16.18em;  top: -0.08em; width: 3.625em;   height: 2.6875em; }
+.anno__svg--pf-dramatic-head  { left: 18.80em;  top: 1.75em;  width: 1.1875em;  height: 1.1875em; }
+.anno__svg--pf-hatch          { left: 28.84em;  top: 17em;     width: 38.3125em; height: 29.4375em; }
+.anno__svg--pf-spacing-line   { left: 68.30em;  top: 42.69em;  width: 2.4375em;  height: 0.3125em; }
+.anno__svg--pf-spacing-head   { left: 67.80em;  top: 42.41em;  width: 0.75em;    height: 0.875em; }
+.anno__note--pf-spacing       { left: 71.46em;  top: 40.22em; }
+.anno__note--pf-dramatic p { transform: rotate(-6deg); }
+.anno__note--pf-spacing p  { transform: rotate(-5deg); }
+
+/* --- Industries marks (Figma frame 48095808) --- */
+.anno--industries { top: 0; }
+.anno__svg--ind-ellipse     { left: 24.19em;  top: -5em;    width: 41.8125em; height: 16.875em; }
+.anno__svg--ind-focal-arrow { left: 63.1em;   top: 10.2em;  width: 1.625em;   height: 2.75em; }
+.anno__svg--ind-focal-head  { left: 62.975em; top: 9.34em;  width: 0.875em;   height: 1.375em; }
+.anno__note--ind-focal { top: 13.55em; left: 63.76em; }
+.anno__note--ind-focal p { transform: rotate(-4deg); }
 
 /* === PAGE: INTRO ========================================== */
 .intro {
@@ -323,13 +526,16 @@ main { display: block; }
 }
 
 /* === PAGE: PORTFOLIO ====================================== */
-.portfolio { padding-bottom: 7.5em; }
+.portfolio { position: relative; isolation: isolate; padding-bottom: 12.5em; }
 .portfolio__title {
   text-align: center;
   white-space: nowrap;
-  margin-bottom: -6em;              /* -96px overlap into the rows */
-  position: relative;
-  z-index: 2;
+  margin-bottom: 6.6875em;          /* room for the bracket svg; 2em gap from h2 to the svg */
+  /* Pinned while the project rows scroll past, until the section ends —
+     and sat behind everything else in the section. */
+  position: sticky;
+  top: 1.5em;
+  z-index: -1;
   pointer-events: none;
 }
 .portfolio__rows {
@@ -406,7 +612,7 @@ main { display: block; }
 }
 
 /* === PAGE: INDUSTRIES ===================================== */
-.industries { padding: 0 1.5em; }
+.industries { position: relative; padding: 0 1.5em; }
 .industries__row {
   position: relative;
   display: flex;
@@ -421,38 +627,25 @@ main { display: block; }
 }
 .industries__list {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;                       /* 8px @ base 16px */
   width: 32.5em;                    /* 520px @ base 16px */
   height: 48.125em;                 /* 770px @ base 16px */
   padding: 0 1em;
   overflow: hidden;
+  /* Position-based opacity: items fade in toward the top focus band and fade
+     out lower down, so they "gain opacity" as the track scrolls upward. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 38%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 38%, transparent 100%);
+}
+.industries__track {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;                       /* 8px @ base 16px */
+  will-change: transform;
 }
 .industries__list li {
   white-space: nowrap;
   font-size: 4em;                   /* 64px */
   line-height: 1.1;
-}
-/* fade-out stack mirroring the Figma opacity ramp */
-.industries__list li:nth-child(1) { opacity: 0.50; }
-.industries__list li:nth-child(2) { opacity: 0.40; }
-.industries__list li:nth-child(3) { opacity: 0.30; }
-.industries__list li:nth-child(4) { opacity: 0.20; }
-.industries__list li:nth-child(5) { opacity: 0.12; }
-.industries__list li:nth-child(6) { opacity: 0.07; }
-.industries__list li:nth-child(n+7) { opacity: 0.04; }
-/* top gradient mask: cream fading down over the first items */
-.industries__list::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 7.0625em;                 /* 113px */
-  background: linear-gradient(to bottom, var(--color-cream) 0%, rgba(232, 228, 219, 0) 100%);
-  pointer-events: none;
-  z-index: 2;
 }
 
 /* === PAGE: CONTACT ======================================== */
@@ -479,4 +672,106 @@ main { display: block; }
    This build targets the desktop frame. Tiers can be added here. */
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; }
+}
+
+/* === TABLET (≤991px, Figma 768 frame) =====================
+   Layout-shape reflow. Type/spacing re-scale via the root tier; the display
+   headings are the exception — explicitly smaller here to match the frame. */
+@media (max-width: 991px) {
+  .t-display-xl { font-size: 8.875em; }   /* "My portfolio" ~142px */
+  .t-display-l  { font-size: 6em; }        /* "About me" ~96px */
+  .industries__list li { font-size: 3.5em; } /* ~56px */
+
+  /* Nav — drop the CTA, keep logo + menu */
+  .nav__cta { display: none; }
+  .nav__right { width: auto; }
+
+  /* Hero — flex layout: headline upper-left, paragraph lower-right */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 18em;
+    padding: 7.5em 1.5em;            /* 120 / 24 */
+  }
+  .hero__h1 { position: static; inset: auto; width: 37.9375em; max-width: 100%; }
+  .hero__paragraph {
+    position: static;
+    inset: auto;
+    align-self: flex-end;
+    margin-right: 5.625em;          /* Figma paragraph right inset */
+  }
+
+  /* Portfolio — single stacked column, image over text, title left-aligned */
+  .portfolio { padding-bottom: 5em; }
+  .portfolio__title {
+    position: static;
+    z-index: auto;
+    text-align: left;
+    margin-bottom: 2.5em;
+  }
+  .portfolio__rows { gap: 4em; }
+  .project { flex-direction: column; align-items: center; gap: 1em; }
+  .project__spacer { display: none; }
+  .project__media { order: -1; width: 28em; max-width: 100%; height: 21.125em; } /* 448 × 338 */
+  .project__meta { width: 28em; max-width: 100%; }
+
+  /* Industries — captions in a row on top, list full-width below */
+  .industries__row { flex-wrap: wrap; gap: 4em 0; padding: 1em 0; }
+  .industries__aside { width: 49%; }
+  .industries__list { order: 1; width: 100%; }
+
+  /* Footer — link columns spread; About-me block scaled down */
+  .footer__links { justify-content: space-between; gap: 1em; }
+  .footer__wordmark { width: 24.6875em; height: 6.625em; } /* 395 × 106 */
+  .footer__photo { width: 8.25em; margin-left: auto; }     /* push photo + arrow right */
+  .footer__photo-frame { height: 4.75em; }
+  .footer__arrow { width: 5.5em; }                          /* 88 */
+  .footer__arrow-layer { width: 5.5em; height: 5.5em; }
+  .footer__arrow-layer--fill { top: 2em; }
+}
+
+/* === MOBILE (≤479px, Figma 390 frame) =====================
+   Builds on the tablet reflow above; overrides only what differs. */
+@media (max-width: 479px) {
+  .container { padding: 0 1em; }            /* 16px gutters */
+
+  .t-display-xl { font-size: 6em; }         /* "My portfolio" ~96px (wraps to 2 lines) */
+  .t-display-l  { font-size: 4em; }          /* "About me" ~64px */
+  .industries__list li { font-size: 2.5em; } /* ~40px */
+
+  /* Nav — 16px gutter (logo stays small, no home scale below 768) */
+  .nav { padding: 1em; }
+
+  /* Hero — one flowing headline; paragraph indented from the left */
+  .hero { gap: 13em; padding: 7.5em 1em; }
+  .hero__h1 { display: block; width: 100%; }
+  .hero__h1 .t-h1 { display: inline; }
+  .hero__h1 .t-h1:not(:last-child)::after { content: ' '; }
+  .hero__h1 .hero__h1-indent { text-align: left; }
+  .hero__paragraph {
+    width: auto;
+    align-self: stretch;
+    margin-right: 0;
+    padding-left: 5.6875em;          /* 91px */
+  }
+
+  /* Intro — full-width centered box, 16px gutter */
+  .intro { padding: 15em 1em 7.5em; }
+  .intro__box { max-width: 100%; }
+
+  /* Portfolio — full-width cards; centered title that wraps */
+  .portfolio__title { text-align: center; white-space: normal; }
+  .project__media { width: 100%; height: 16.875em; }   /* 358 × 270 */
+  .project__meta { width: 100%; }
+
+  /* Industries — 16px gutter */
+  .industries { padding: 0 1em; }
+
+  /* Footer — drop the photo; "About me" + arrow only */
+  .footer__photo { display: none; }
+  .footer__wordmark { width: 16.5em; height: 4.375em; }   /* 264 × 70 */
+  .footer__arrow { width: 5.3125em; padding: 0; margin-left: auto; } /* 85, pushed right */
+  .footer__arrow-layer { width: 5.3125em; height: 5.3125em; }
+  .footer__arrow-layer--fill { top: 0; }
 }

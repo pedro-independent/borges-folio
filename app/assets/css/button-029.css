@@ -1,0 +1,43 @@
+/* === BUTTON COLOUR WIPE (Osmo "Button 029") ================
+   Layered on TOP of the Button 004 flip — both run on hover. A colour fill
+   wipes in from the bottom to the top via clip-path (the resource's original
+   left→right was changed to bottom→top per request). Self-clipped to the .btn
+   pill via clip-path (no overflow:hidden, so it never clips the 004 characters
+   that fly out of the button). The incoming hover label is recoloured so it
+   reads against the fill. Base .btn styling is left untouched. */
+.button-029 {
+  position: relative;
+  --button-029-fill: var(--color-blue);
+  --button-029-text: var(--color-off-white);
+  --button-029-radius: 0.25em;                                                /* matches .btn */
+  --button-029-clip-path: inset(100% 0 0 0 round var(--button-029-radius));   /* hidden — revealed from the bottom */
+  --button-029-clip-path-hover: inset(0 0 0 0 round var(--button-029-radius)); /* full */
+  --button-029-ease-hover: cubic-bezier(0.32, 0.72, 0, 1);
+}
+.button-029__hover {
+  position: absolute;
+  inset: -1px; /* cover the .btn's 1px (transparent) border so the fill reaches the edge */
+  z-index: 0;
+  pointer-events: none;
+  clip-path: var(--button-029-clip-path);
+  transition: clip-path 0.5s var(--button-029-ease-hover);
+}
+.button-029__hover-bg {
+  position: absolute;
+  inset: 0;
+  background-color: var(--button-029-fill);
+}
+/* Keep the label above the fill. */
+.button-029 .button-004__inner { position: relative; z-index: 1; }
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .button-029:is(:hover, :focus-visible) .button-029__hover,
+  [data-hover]:is(:hover, :focus-visible) .button-029 .button-029__hover {
+    clip-path: var(--button-029-clip-path-hover);
+    transition: clip-path 0.55s 0.05s var(--button-029-ease-hover);
+  }
+  /* The incoming (hover) characters land on the fill — recolour for contrast. */
+  .button-029:is(:hover, :focus-visible) .button-004__text.is--hover {
+    color: var(--button-029-text);
+  }
+}

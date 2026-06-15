@@ -39,7 +39,7 @@ const textRight = (i) => i % 2 === 0
 </script>
 
 <template>
-  <section id="work" class="portfolio container">
+  <section id="work" class="portfolio container" data-theme-section="light">
     <h2 class="portfolio__title"><span class="t-display-xl">My portfolio</span></h2>
 
     <div class="portfolio__rows">
@@ -85,7 +85,9 @@ const textRight = (i) => i % 2 === 0
     </div>
 
     <div class="portfolio__cta">
-      <a class="btn btn--ghost" href="#work">View more projects</a>
+      <AppButton class="btn btn--dark" href="#work" label="View more projects" />
     </div>
+
+    <HpPortfolioAnnotations class="anno--portfolio" />
   </section>
 </template>

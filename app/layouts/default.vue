@@ -2,6 +2,6 @@
   <div class="page">
     <AppNav />
     <main><slot /></main>
-    <AppFooter />
+    <AppFooter :key="$route.path" />
   </div>
 </template>
