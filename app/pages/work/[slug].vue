@@ -1,18 +1,45 @@
 <script setup>
-// Project case-study template (Figma node 15324-5169). Data-driven from
-// utils/projects.js so every project reuses this layout; ClickGuard is the only
-// one with full copy for now. Covers/media are placeholder tints until the CMS
-// supplies images. The "Next up" footer is handled by AppFooter on /work/[slug].
-const route = useRoute()
-const project = getProject(route.params.slug)
+// Project case-study template (Figma node 15324-5169). Reads the Sanity
+// `project` doc by slug; falls back to utils/projects.js if the CMS is
+// unreachable. Media (cover / role media / decision images) isn't uploaded yet,
+// so those fields fall back to the local placeholder tints/colours until they
+// are. The "Next up" footer is handled by AppFooter on /work/[slug].
+import { PROJECT_BY_SLUG } from '~/utils/sanityQueries'
 
-if (!project) {
+const route = useRoute()
+const slug = route.params.slug
+
+// Block on the server (SSR ships real data) but NOT on client-side navigation,
+// so the page transition isn't suspended waiting on the fetch.
+const { data } = await useSanityQuery(`project:${slug}`, PROJECT_BY_SLUG, { slug }, { lazy: import.meta.client })
+const local = getProject(slug)
+
+// Reactive: prefer CMS content; for media the CMS lacks (no images yet), keep
+// the local placeholder colours so the layout doesn't regress. Computed so a
+// lazy client fetch fills it in without blocking the transition.
+const project = computed(() => {
+  const cms = data.value
+  if (!cms) return local || null
+  return {
+    ...cms,
+    cover: cms.cover || local?.cover,
+    role: cms.role
+      ? { ...cms.role, media: cms.role.media?.length ? cms.role.media : local?.role?.media }
+      : local?.role,
+    decisions: (cms.decisions || local?.decisions || []).map((d, i) => ({
+      ...d,
+      image: d.image || local?.decisions?.[i]?.image,
+    })),
+  }
+})
+
+if (!project.value) {
   throw createError({ statusCode: 404, statusMessage: 'Project not found', fatal: true })
 }
 
 useSeoMeta({
-  title: project.title,
-  description: project.description,
+  title: () => project.value?.seo?.metaTitle || project.value?.title,
+  description: () => project.value?.seo?.metaDescription || project.value?.description,
 })
 </script>
 

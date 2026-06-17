@@ -1,0 +1,8 @@
+node_modules
+dist
+.sanity
+*.log
+
+# local env (projectId/dataset live here or inlined in the config)
+.env*
+!.env.example

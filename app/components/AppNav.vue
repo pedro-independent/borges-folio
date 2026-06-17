@@ -28,6 +28,15 @@ function onLogoClick(e) {
   else window.scrollTo(0, 0)
 }
 
+// The "Get in touch" CTA routes to the dedicated /contact page through the
+// Lenis-aware smooth navigation (so it gets the SPA page transition). The plain
+// href keeps it a real link for SSR / no-JS / open-in-new-tab.
+const { navigate: smoothNavigate } = useSmoothNav()
+function goContact(e) {
+  e.preventDefault()
+  smoothNavigate('/contact')
+}
+
 function teardown() {
   mm?.revert()
   mm = null
@@ -105,7 +114,7 @@ onBeforeUnmount(teardown)
       </button>
 
       <div class="nav__cta">
-        <AppButton class="btn btn--light" href="#contact" label="Get in touch" />
+        <AppButton class="btn btn--light" href="/contact" label="Get in touch" @click="goContact" />
       </div>
     </div>
 

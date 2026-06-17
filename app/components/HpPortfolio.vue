@@ -1,8 +1,12 @@
 <script setup>
-// `projects` is structured so it can be swapped for a Sanity GROQ result
-// 1:1 later (title / subtitle / role / media). For now it ships with the
-// Figma content as the default.
+import { computed } from 'vue'
+
+// The home portfolio is a bespoke showcase (phone mockups, specific imagery) that
+// doesn't map to the generic project-card model, so `projects` stays hardcoded.
+// Only the section title + CTA come from the homePage CMS doc.
 const props = defineProps({
+  title: { type: String, default: null },
+  cta: { type: Object, default: null },
   projects: {
     type: Array,
     default: () => [
@@ -34,13 +38,16 @@ const props = defineProps({
   },
 })
 
+const title = computed(() => props.title || 'My portfolio')
+const cta = computed(() => props.cta || { label: 'View more projects', href: '#work' })
+
 // Even rows: media left of centre, text right. Odd rows: text left, media right.
 const textRight = (i) => i % 2 === 0
 </script>
 
 <template>
   <section id="work" class="portfolio container" data-theme-section="light">
-    <h2 class="portfolio__title"><span class="t-display-xl">My portfolio</span></h2>
+    <h2 class="portfolio__title"><span class="t-display-xl">{{ title }}</span></h2>
 
     <div class="portfolio__rows">
       <article v-for="(p, i) in props.projects" :key="p.title" class="project">
@@ -85,7 +92,7 @@ const textRight = (i) => i % 2 === 0
     </div>
 
     <div class="portfolio__cta">
-      <AppButton class="btn btn--dark" href="#work" label="View more projects" />
+      <AppButton class="btn btn--dark" :href="cta.href" :label="cta.label" />
     </div>
 
     <HpPortfolioAnnotations class="anno--portfolio" />

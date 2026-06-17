@@ -81,6 +81,15 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
   }
 
+  // Synchronous re-scan: the page transition fires this once the incoming page
+  // is back in normal flow at the top, so section rects are correct. (We can't
+  // use page:finish — it fires mid-transition while the page is still
+  // position:fixed and translated, which mis-detects the active section.)
+  function reinitNow() {
+    cleanup?.()
+    cleanup = initCheckSectionThemeScroll()
+  }
+
   nuxtApp.hook('app:mounted', reinit)
-  nuxtApp.hook('page:finish', reinit)
+  nuxtApp.hook('page:transition:done', reinitNow)
 })

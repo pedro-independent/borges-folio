@@ -4,7 +4,7 @@
 // (current route shown in accent blue), and a footer with the Lisbon local time
 // and socials. Teleported to <body> so it sits above the fixed nav; open/close is
 // animated with GSAP and degrades to an instant show under reduced-motion.
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount, resolveComponent } from 'vue'
 
 const props = defineProps({ open: { type: Boolean, default: false } })
 const emit = defineEmits(['close'])
@@ -14,12 +14,19 @@ const nuxtApp = useNuxtApp()
 const { navigate: smoothNavigate } = useSmoothNav()
 const mounted = ref(false)
 
-const links = [
-  { label: 'Home', to: '/' },
-  { label: 'About', to: '/about' },
-  { label: 'Work', to: '/work' },
-  { label: 'Contact', to: '/#contact', icon: true },
-]
+// Nav + socials from siteSettings (shared, non-blocking; falls back to the
+// hardcoded set until the fetch lands). The Contact link carries the icon.
+const { settings } = useSiteSettings()
+const links = computed(() =>
+  settings.value.navItems.map((n) => ({ label: n.label, to: n.href, icon: n.href === '/contact' })),
+)
+const socials = computed(() => settings.value.socials)
+
+const SOCIAL_ICONS = {
+  linkedin: resolveComponent('IconLinkedin'),
+  instagram: resolveComponent('IconInstagram'),
+}
+const socialIcon = (platform) => SOCIAL_ICONS[platform] || null
 
 // Page-level links carry the "current" highlight; in-page anchors (e.g. Contact)
 // never do.
@@ -39,7 +46,7 @@ let clock = null
 function tick() {
   try {
     time.value = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit', hour12: true,
+      timeZone: settings.value.timezone, hour: '2-digit', minute: '2-digit', hour12: true,
     }).format(new Date())
   } catch { time.value = '' }
 }
@@ -126,23 +133,24 @@ function onLeave(el, done) {
 
             <div class="menu__foot">
               <p class="menu__place" data-menu-item>
-                <span>Lisbon, Portugal</span>
+                <span>{{ settings.locationLabel }}</span>
                 <span class="menu__time">{{ time }}</span>
               </p>
               <div class="menu__social" data-menu-item>
-                <a href="https://www.linkedin.com/in/pedrosmborges/" target="_blank" rel="noopener" data-button-004 class="button-004">
+                <a
+                  v-for="s in socials"
+                  :key="s.url"
+                  :href="s.url"
+                  target="_blank"
+                  rel="noopener"
+                  data-button-004
+                  class="button-004"
+                >
                   <span class="button-004__inner">
-                    <span data-button-004-text class="button-004__text is--default">Linkedin</span>
-                    <span aria-hidden="true" data-button-004-text class="button-004__text is--hover">Linkedin</span>
+                    <span data-button-004-text class="button-004__text is--default">{{ s.label }}</span>
+                    <span aria-hidden="true" data-button-004-text class="button-004__text is--hover">{{ s.label }}</span>
                   </span>
-                  <IconLinkedin class="menu__social-icon" />
-                </a>
-                <a href="https://www.instagram.com/pedro.sm.borges/" target="_blank" rel="noopener" data-button-004 class="button-004">
-                  <span class="button-004__inner">
-                    <span data-button-004-text class="button-004__text is--default">Instagram</span>
-                    <span aria-hidden="true" data-button-004-text class="button-004__text is--hover">Instagram</span>
-                  </span>
-                  <IconInstagram class="menu__social-icon" />
+                  <component :is="socialIcon(s.platform)" v-if="socialIcon(s.platform)" class="menu__social-icon" />
                 </a>
               </div>
             </div>

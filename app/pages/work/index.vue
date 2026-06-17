@@ -1,15 +1,82 @@
 <script setup>
+import { WORK_PAGE } from '~/utils/sanityQueries'
+
+// Content comes from the Sanity `workPage` doc (featured + grid are curated
+// reference lists; the archive is every project with a `year`, grouped). The
+// hardcoded FALLBACK below mirrors that and renders if the CMS is unreachable
+// or a list is empty — so the page never breaks.
+const FALLBACK = {
+  quoteText: 'Design is a plan for arranging elements in such a way as best to accomplish a particular purpose.',
+  quoteAttribution: 'Charles Eames',
+  featured: [
+    { title: 'ClickGuard', desc: 'B2B SaaS conversion-focused website', awards: 1, slug: 'clickguard', tint: '#cdb8f2' },
+    { title: 'Leafwell', desc: 'Medical cannabis healthcare provider platform', slug: 'leafwell', tint: '#d8e0ea' },
+    { title: 'Amuse Bouche', desc: 'Award-winning marketing consultant agency website', awards: 2, slug: 'amuse-bouche', tint: '#e7ddca' },
+  ],
+  grid: [
+    { title: 'ClickGuard', desc: 'B2B SaaS conversion-focused website', awards: 1, slug: 'clickguard', tint: '#cdb8f2' },
+    { title: 'Plen Advogados', desc: 'Law firm brand & website', comingSoon: true, slug: 'plen-advogados', tint: '#d8e0ea' },
+    { title: 'Opterion', desc: 'Fintech dashboard product design', comingSoon: true, slug: 'opterion', tint: '#e7ddca' },
+    { title: 'Omniscience', desc: 'AI analytics marketing site', comingSoon: true, slug: 'omniscience', tint: '#d3ddd5' },
+    { title: 'Nova | Mentorship', desc: 'Executive education platform', comingSoon: true, slug: 'nova-mentorship', tint: '#ecd9c6' },
+    { title: 'Aruki', desc: 'E-commerce storefront & product system', comingSoon: true, slug: 'aruki', tint: '#d3d6e8' },
+    { title: 'Insider', desc: 'Membership community platform', comingSoon: true, slug: 'insider', tint: '#e3d2d2' },
+    { title: 'Woods', desc: 'Outdoor brand editorial website', comingSoon: true, slug: 'woods', tint: '#cdd9cf' },
+  ],
+  archive: [
+    {
+      year: '2024',
+      items: [
+        { title: 'Nexa', desc: 'B2B SaaS conversion-focused website', awards: 2, slug: 'nexa' },
+        { title: 'Rocco', desc: 'Restaurant brand & booking experience', awards: 1, slug: 'rocco' },
+        { title: 'Software Angels', desc: 'Software studio portfolio', awards: 1, slug: 'software-angels' },
+        { title: 'PG Arquitetos', desc: 'Architecture studio website', awards: 1, slug: 'pg-arquitetos' },
+      ],
+    },
+    {
+      year: '2023',
+      items: [
+        { title: 'The Land Group', desc: 'Real-estate investment platform', awards: 1, slug: 'the-land-group' },
+        { title: 'Specialist Ceramics', desc: 'Industrial ceramics e-commerce', awards: 2, slug: 'specialist-ceramics' },
+        { title: 'Design for Investment', desc: 'Financial advisory website', awards: 1, slug: 'design-for-investment' },
+      ],
+    },
+  ],
+}
+
+// Block on the server (SSR ships real data) but NOT on client-side navigation,
+// so the page transition isn't suspended waiting on the fetch.
+const { data } = await useSanityQuery('workPage', WORK_PAGE, {}, { lazy: import.meta.client })
+
+// Map a Sanity project card to the shape this template expects (subtitle → desc).
+const toCard = (c) => ({ title: c.title, desc: c.subtitle, awards: c.awards, slug: c.slug, tint: c.tint, comingSoon: c.comingSoon })
+// Group the flat archive list (already ordered by year desc) into year sections.
+const groupByYear = (list) => {
+  const order = []
+  const byYear = {}
+  for (const c of list) {
+    const y = String(c.year)
+    if (!byYear[y]) { byYear[y] = []; order.push(y) }
+    byYear[y].push(toCard(c))
+  }
+  return order.map((year) => ({ year, items: byYear[year] }))
+}
+
+// Reactive (computed) so when the lazy client fetch resolves the lists update;
+// the fallback (identical content) renders instantly in the meantime.
+const featured = computed(() => (data.value?.featured?.length ? data.value.featured.map(toCard) : FALLBACK.featured))
+const grid = computed(() => (data.value?.grid?.length ? data.value.grid.map(toCard) : FALLBACK.grid))
+const archive = computed(() => (data.value?.archive?.length ? groupByYear(data.value.archive) : FALLBACK.archive))
+const quoteText = computed(() => data.value?.quoteText || FALLBACK.quoteText)
+const quoteAttribution = computed(() => data.value?.quoteAttribution || FALLBACK.quoteAttribution)
+
 useSeoMeta({
-  title: 'Work',
-  description:
+  title: () => data.value?.seo?.metaTitle || 'Work',
+  description: () =>
+    data.value?.seo?.metaDescription ||
     'Selected work by Pedro Borges — UX/UI design for SaaS, healthcare, and brand platforms, including award-winning projects.',
 })
 
-// Each entry mirrors a future Sanity `project` document so the client can manage
-// these from the CMS. `slug` links to the project template page (/work/[slug]);
-// covers are CMS-bound, so for now each card uses a placeholder tint. `awards`
-// (count) renders the blue badge; `comingSoon` the muted one. Published cards
-// (not comingSoon) link to their case study.
 const awardLabel = (n) => `${n} award${n > 1 ? 's' : ''}`
 // Published cards link to their case study; coming-soon ones stay plain <article>.
 // resolveComponent is needed so `<component :is>` renders a real <a>, not a
@@ -17,46 +84,6 @@ const awardLabel = (n) => `${n} award${n > 1 ? 's' : ''}`
 const NuxtLink = resolveComponent('NuxtLink')
 const cardIs = (p) => (p.comingSoon ? 'article' : NuxtLink)
 const cardTo = (p) => (p.comingSoon ? undefined : `/work/${p.slug}`)
-
-// Highlight reel — the first item gets the large hero treatment.
-const featured = [
-  { title: 'ClickGuard', desc: 'B2B SaaS conversion-focused website', awards: 1, slug: 'clickguard', tint: '#cdb8f2' },
-  { title: 'Leafwell', desc: 'Medical cannabis healthcare provider platform', slug: 'leafwell', tint: '#d8e0ea' },
-  { title: 'Amuse Bouche', desc: 'Award-winning marketing consultant agency website', awards: 2, slug: 'amuse-bouche', tint: '#e7ddca' },
-]
-
-// Main project grid.
-const grid = [
-  { title: 'ClickGuard', desc: 'B2B SaaS conversion-focused website', awards: 1, slug: 'clickguard', tint: '#cdb8f2' },
-  { title: 'Plen Advogados', desc: 'Law firm brand & website', comingSoon: true, slug: 'plen-advogados', tint: '#d8e0ea' },
-  { title: 'Opterion', desc: 'Fintech dashboard product design', comingSoon: true, slug: 'opterion', tint: '#e7ddca' },
-  { title: 'Omniscience', desc: 'AI analytics marketing site', comingSoon: true, slug: 'omniscience', tint: '#d3ddd5' },
-  { title: 'Nova | Mentorship', desc: 'Executive education platform', comingSoon: true, slug: 'nova-mentorship', tint: '#ecd9c6' },
-  { title: 'Aruki', desc: 'E-commerce storefront & product system', comingSoon: true, slug: 'aruki', tint: '#d3d6e8' },
-  { title: 'Insider', desc: 'Membership community platform', comingSoon: true, slug: 'insider', tint: '#e3d2d2' },
-  { title: 'Woods', desc: 'Outdoor brand editorial website', comingSoon: true, slug: 'woods', tint: '#cdd9cf' },
-]
-
-// Older work, grouped by year.
-const archive = [
-  {
-    year: '2024',
-    items: [
-      { title: 'Nexa', desc: 'B2B SaaS conversion-focused website', awards: 2, slug: 'nexa' },
-      { title: 'Rocco', desc: 'Restaurant brand & booking experience', awards: 1, slug: 'rocco' },
-      { title: 'Software Angels', desc: 'Software studio portfolio', awards: 1, slug: 'software-angels' },
-      { title: 'PG Arquitetos', desc: 'Architecture studio website', awards: 1, slug: 'pg-arquitetos' },
-    ],
-  },
-  {
-    year: '2023',
-    items: [
-      { title: 'The Land Group', desc: 'Real-estate investment platform', awards: 1, slug: 'the-land-group' },
-      { title: 'Specialist Ceramics', desc: 'Industrial ceramics e-commerce', awards: 2, slug: 'specialist-ceramics' },
-      { title: 'Design for Investment', desc: 'Financial advisory website', awards: 1, slug: 'design-for-investment' },
-    ],
-  },
-]
 </script>
 
 <template>
@@ -97,8 +124,8 @@ const archive = [
       <blockquote class="work__quote-inner">
         <IconQuote class="work__quote-mark" />
         <p class="work__quote-text">
-          Design is a plan for arranging elements in such a way as best to accomplish a particular purpose.
-          <br />— Charles Eames
+          {{ quoteText }}
+          <br />— {{ quoteAttribution }}
         </p>
       </blockquote>
     </section>

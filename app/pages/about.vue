@@ -1,13 +1,14 @@
 <script setup>
-useSeoMeta({
-  title: 'About',
-  description:
-    'Pedro Borges — a UX/UI designer focused on intentional design decisions rooted in psychology and perception.',
-})
+// About reads the aboutPage singleton; each field falls back to its Figma copy.
+// Lazy on the client so the fetch never suspends the page transition.
+import { ABOUT_PAGE } from '~/utils/sanityQueries'
 
-// CV data (title / place — date). Mirrors the Figma content model so it can be
-// swapped for a Sanity GROQ result later.
-const cv = [
+const { data } = await useSanityQuery('aboutPage', ABOUT_PAGE, {}, { lazy: import.meta.client })
+const cms = computed(() => data.value || {})
+
+// CV fallback (title / [role, place — date]). The CMS shape is
+// cvGroups[]{ title, entries[]{ label, meta } } — normalised to this below.
+const FALLBACK_CV = [
   {
     title: 'Professional experience',
     rows: [
@@ -61,40 +62,74 @@ const cv = [
     ],
   },
 ]
+
+const introLede = computed(
+  () =>
+    cms.value.introLede ||
+    'I’m a UX/UI designer focused on intentional design decisions rooted in psychology and perception.',
+)
+const bioTitle = computed(
+  () => cms.value.bioTitle || 'I lead digital experiences across platforms, products, and institutional systems.',
+)
+const bioLead = computed(
+  () =>
+    cms.value.bioLead ||
+    'Senior UX/UI designer recognized among the top designers by Clube da Criatividade de Portugal.',
+)
+const bioBody = computed(
+  () =>
+    cms.value.bioBody ||
+    'At duall studio I play a central role within the design team, acting as lead designer to shape creative directions and ensure clarity and consistency across projects. I have experience in strategic decision-making, end-to-end project management, and direct communication with national and international clients. I am also responsible for presenting proposals, aligning strategy, and guiding projects from initial concept through to production.',
+)
+const portrait = computed(() => cms.value.portrait || '/img/about-portrait.png')
+const portraitCaption = computed(() => cms.value.portraitCaption || 'If awards are your thing check them out bellow')
+const awardsImage = computed(() => cms.value.awardsImage || '/img/about-awards.jpg')
+const quoteText = computed(
+  () =>
+    cms.value.quoteText ||
+    'Indifference to people and the reality in which they live is actually the only true deadly sin in design.',
+)
+const quoteAttribution = computed(() => cms.value.quoteAttribution || 'Dieter Rams')
+const cv = computed(() => {
+  const groups = cms.value.cvGroups
+  if (groups?.length) {
+    return groups.map((g) => ({ title: g.title, rows: (g.entries || []).map((e) => [e.label, e.meta]) }))
+  }
+  return FALLBACK_CV
+})
+
+useSeoMeta({
+  title: () => cms.value.seo?.metaTitle || 'About',
+  description: () =>
+    cms.value.seo?.metaDescription ||
+    'Pedro Borges — a UX/UI designer focused on intentional design decisions rooted in psychology and perception.',
+})
 </script>
 
 <template>
   <div class="about">
     <!-- Intro -->
     <section class="about__intro container" data-theme-section="light">
-      <h1 class="about__lede">
-        I’m a UX/UI designer focused on intentional design decisions rooted in psychology and perception.
-      </h1>
+      <h1 class="about__lede">{{ introLede }}</h1>
     </section>
 
     <!-- Lead / bio -->
     <section class="about__lead container" data-theme-section="light">
       <figure class="about__aside">
         <div class="about__photo about__photo--portrait">
-          <img src="/img/about-portrait.png" alt="Pedro Borges" />
+          <img :src="portrait" alt="Pedro Borges" />
         </div>
         <figcaption class="about__aside-cap">
-          <span>If awards are your thing check them out bellow</span>
+          <span>{{ portraitCaption }}</span>
           <IconArrowDown class="about__aside-arrow" />
         </figcaption>
       </figure>
 
       <div class="about__bio">
-        <h2 class="about__bio-title">I lead digital experiences across platforms, products, and institutional systems.</h2>
+        <h2 class="about__bio-title">{{ bioTitle }}</h2>
         <div class="about__bio-text">
-          <p class="about__bio-lead">Senior UX/UI designer recognized among the top designers by Clube da Criatividade de Portugal.</p>
-          <p class="about__bio-body">
-            At duall studio I play a central role within the design team, acting as lead designer to shape creative
-            directions and ensure clarity and consistency across projects. I have experience in strategic
-            decision-making, end-to-end project management, and direct communication with national and international
-            clients. I am also responsible for presenting proposals, aligning strategy, and guiding projects from
-            initial concept through to production.
-          </p>
+          <p class="about__bio-lead">{{ bioLead }}</p>
+          <p class="about__bio-body">{{ bioBody }}</p>
         </div>
       </div>
     </section>
@@ -104,8 +139,8 @@ const cv = [
       <blockquote class="about__quote-inner">
         <span class="about__quote-mark" aria-hidden="true">“</span>
         <p class="about__quote-text">
-          Indifference to people and the reality in which they live is actually the only true deadly sin in design."
-          <br />— Dieter Rams
+          {{ quoteText }}
+          <br />— {{ quoteAttribution }}
         </p>
       </blockquote>
     </section>
@@ -113,7 +148,7 @@ const cv = [
     <!-- CV -->
     <section class="about__cv container" data-theme-section="light">
       <div class="about__cv-media">
-        <img src="/img/about-awards.jpg" alt="" />
+        <img :src="awardsImage" alt="" />
       </div>
 
       <div class="about__cv-col">

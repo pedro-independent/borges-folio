@@ -311,6 +311,14 @@ main { display: block; }
 [data-theme-nav="light"] .nav__menu { color: var(--color-ink); }
 [data-theme-nav="light"] .nav__logo img { filter: brightness(0); }
 
+/* While a page transition runs, hide the persistent shell. The footer is
+   re-keyed per route, so it remounts mid-transition and would otherwise jump to
+   the top once the outgoing page leaves the flow; the nav is also driven by
+   GSAP in app.vue, this is a server-safe backstop. `visibility` keeps layout
+   metrics intact so theme detection can still measure the nav height. */
+.page.is-transitioning .nav,
+.page.is-transitioning .footer { opacity: 0; visibility: hidden; }
+
 /* === FOOTER =============================================== */
 .footer { padding-top: 7.5em; }     /* 120px */
 .footer__inner {
@@ -612,7 +620,16 @@ main { display: block; }
 }
 
 /* === PAGE: INDUSTRIES ===================================== */
-.industries { position: relative; padding: 0 1.5em; }
+/* `.industries` is a tall scroll runway; `.industries__sticky` latches with pure
+   CSS `position: sticky` (no GSAP pin → no pin-spacer → document height stays
+   constant, so the page-transition freeze never shifts). The runway height is set
+   in JS (HpIndustries.vue) to `sticky height + scroll distance`; the gutter +
+   max-width come from `.container` on the sticky child. */
+.industries { position: relative; }
+.industries__sticky { position: relative; }
+@media (min-width: 768px) {
+  .industries__sticky { position: sticky; top: 7.5em; } /* mirrors topGap in JS */
+}
 .industries__row {
   position: relative;
   display: flex;
@@ -650,7 +667,7 @@ main { display: block; }
 
 /* === PAGE: CONTACT ======================================== */
 .contact {
-  padding: 7.5em 1.5em 0;
+  padding: 0 1.5em;
   text-align: center;
 }
 .contact__inner {
@@ -764,9 +781,6 @@ main { display: block; }
   .portfolio__title { text-align: center; white-space: normal; }
   .project__media { width: 100%; height: 16.875em; }   /* 358 × 270 */
   .project__meta { width: 100%; }
-
-  /* Industries — 16px gutter */
-  .industries { padding: 0 1em; }
 
   /* Footer — drop the photo; "About me" + arrow only */
   .footer__photo { display: none; }

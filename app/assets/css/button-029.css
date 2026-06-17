@@ -36,6 +36,10 @@
     clip-path: var(--button-029-clip-path-hover);
     transition: clip-path 0.55s 0.05s var(--button-029-ease-hover);
   }
+  /* The fill IS the hover affordance — cancel the global `.btn:hover` opacity
+     dim so the blue reads at full strength instead of washed-out. (.btn.button-029
+     out-specifies the base rule; non-029 buttons keep the dim.) */
+  .btn.button-029:is(:hover, :focus-visible) { opacity: 1; }
   /* The incoming (hover) characters land on the fill — recolour for contrast. */
   .button-029:is(:hover, :focus-visible) .button-004__text.is--hover {
     color: var(--button-029-text);

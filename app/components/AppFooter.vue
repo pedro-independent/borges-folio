@@ -1,16 +1,11 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
 
-const social = [
-  { label: 'Instagram', href: 'https://www.instagram.com/pedro.sm.borges/' },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/pedrosmborges/' },
-]
-const nav = [
-  { label: 'Home', to: '/' },
-  { label: 'About', to: '/about' },
-  { label: 'Work', to: '/work' },
-  { label: 'Contact', to: '/#contact' },
-]
+// Socials + nav from siteSettings (shared, non-blocking; falls back to the
+// hardcoded set until the fetch lands).
+const { settings } = useSiteSettings()
+const social = computed(() => settings.value.socials.map((s) => ({ label: s.label, href: s.url })))
+const nav = computed(() => settings.value.navItems.map((n) => ({ label: n.label, to: n.href })))
 
 // Contextual end-of-page CTA: a fill that runs from 30% → 100% opacity over 8s
 // while the footer is in view (pausing when it isn't). On completion or click
@@ -63,11 +58,11 @@ onMounted(() => {
     let hovering = false
     let hoverTween = null
 
-    // 8s total: "About me" fills first (6.5s), then the arrow (1.5s).
+    // 12s total: the label fills first (10.5s), then the arrow (1.5s).
     // Only the auto-fill (not the hover fast-fill) redirects on completion.
     const tl = gsap.timeline({ paused: true, onComplete: () => { if (!hovering) goCta() } })
-    tl.to(el, { '--wm-fill': 1, duration: 6.5, ease: 'none' }, 0)
-      .to(el, { '--ar-fill': 1, duration: 1.5, ease: 'none' }, 6.5)
+    tl.to(el, { '--wm-fill': 1, duration: 10.5, ease: 'none' }, 0)
+      .to(el, { '--ar-fill': 1, duration: 1.5, ease: 'none' }, 10.5)
 
     const enter = () => {
       hovering = true
