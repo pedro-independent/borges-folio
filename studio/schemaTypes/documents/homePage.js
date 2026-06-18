@@ -13,7 +13,6 @@ export default defineType({
     { name: 'industries', title: 'Industries' },
     { name: 'portfolio', title: 'Portfolio' },
     { name: 'contact', title: 'Contact band' },
-    { name: 'annotations', title: 'Annotations' },
     { name: 'seo', title: 'SEO' },
   ],
   fields: [
@@ -90,28 +89,6 @@ export default defineType({
     defineField({ name: 'contactLabel', type: 'string', title: 'Label', group: 'contact', initialValue: 'Contact' }),
     defineField({ name: 'contactHeading', type: 'text', rows: 2, title: 'Heading', group: 'contact' }),
     defineField({ name: 'contactCta', type: 'ctaLink', title: 'CTA', group: 'contact' }),
-
-    // --- Annotations (optional design callouts) ---
-    defineField({
-      name: 'heroAnnotations',
-      type: 'array',
-      title: 'Hero annotations',
-      group: 'annotations',
-      of: [{ type: 'string' }],
-    }),
-    defineField({
-      name: 'industriesAnnotation',
-      type: 'string',
-      title: 'Industries annotation',
-      group: 'annotations',
-    }),
-    defineField({
-      name: 'portfolioAnnotations',
-      type: 'array',
-      title: 'Portfolio annotations',
-      group: 'annotations',
-      of: [{ type: 'string' }],
-    }),
 
     defineField({ name: 'seo', type: 'seo', title: 'SEO', group: 'seo' }),
   ],

@@ -28,7 +28,6 @@ export default defineType({
       description: 'Used in the browser tab title, e.g. "UX/UI Designer".',
       initialValue: 'UX/UI Designer',
     }),
-    defineField({ name: 'logo', type: 'image', title: 'Logo (wordmark)', group: 'general' }),
     defineField({
       name: 'navItems',
       type: 'array',

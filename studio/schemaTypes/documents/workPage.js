@@ -20,7 +20,7 @@ export default defineType({
       type: 'array',
       title: 'Featured projects',
       group: 'content',
-      description: 'Curate + order the Featured section. Leave empty to use each project’s "Featured" flag.',
+      description: 'Curate + order the Featured section. Cards open the project’s case-study page.',
       of: [{ type: 'reference', to: [{ type: 'project' }] }],
     }),
     defineField({
@@ -28,7 +28,16 @@ export default defineType({
       type: 'array',
       title: 'Grid projects',
       group: 'content',
-      description: 'The main project grid, in order. Coming-soon projects show a muted badge. The Archive below is derived automatically from each project’s "Year".',
+      description: 'The main project grid, in order. Cards open the case-study page; coming-soon projects show a muted badge instead of linking.',
+      of: [{ type: 'reference', to: [{ type: 'project' }] }],
+    }),
+    defineField({
+      name: 'archiveProjects',
+      type: 'array',
+      title: 'Archive projects',
+      group: 'content',
+      description:
+        'The year-grouped list below the grid. These are older/archived projects — rows are grouped by each project’s "Year" and link out to the project’s "Live website URL" (new tab) rather than an internal case-study page.',
       of: [{ type: 'reference', to: [{ type: 'project' }] }],
     }),
     defineField({ name: 'seo', type: 'seo', title: 'SEO', group: 'seo' }),

@@ -49,7 +49,10 @@ const FALLBACK = {
 const { data } = await useSanityQuery('workPage', WORK_PAGE, {}, { lazy: import.meta.client })
 
 // Map a Sanity project card to the shape this template expects (subtitle → desc).
-const toCard = (c) => ({ title: c.title, desc: c.subtitle, awards: c.awards, slug: c.slug, tint: c.tint, comingSoon: c.comingSoon })
+const toCard = (c) => ({
+  title: c.title, desc: c.subtitle, awards: c.awards, slug: c.slug,
+  tint: c.tint, cover: c.cover, comingSoon: c.comingSoon, liveUrl: c.liveUrl,
+})
 // Group the flat archive list (already ordered by year desc) into year sections.
 const groupByYear = (list) => {
   const order = []
@@ -84,6 +87,15 @@ const awardLabel = (n) => `${n} award${n > 1 ? 's' : ''}`
 const NuxtLink = resolveComponent('NuxtLink')
 const cardIs = (p) => (p.comingSoon ? 'article' : NuxtLink)
 const cardTo = (p) => (p.comingSoon ? undefined : `/work/${p.slug}`)
+
+// Card media: a real cover image when present, else the legacy tint colour, else
+// the CSS default (var(--color-lavender)).
+const cardMedia = (p) =>
+  p.cover
+    ? { backgroundImage: `url(${p.cover})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : p.tint
+      ? { background: p.tint }
+      : null
 </script>
 
 <template>
@@ -94,7 +106,7 @@ const cardTo = (p) => (p.comingSoon ? undefined : `/work/${p.slug}`)
     <section class="work__featured container" data-theme-section="light">
       <div class="work__featured-row">
         <component :is="cardIs(featured[0])" :to="cardTo(featured[0])" class="work__card work__card--hero">
-          <span class="work__card-media" :style="{ background: featured[0].tint }" />
+          <span class="work__card-media" :style="cardMedia(featured[0])" />
           <div class="work__card-info">
             <div class="work__card-head">
               <h2 class="work__card-title">{{ featured[0].title }}</h2>
@@ -106,7 +118,7 @@ const cardTo = (p) => (p.comingSoon ? undefined : `/work/${p.slug}`)
 
         <div class="work__featured-pair">
           <component :is="cardIs(p)" :to="cardTo(p)" v-for="p in featured.slice(1)" :key="p.slug" class="work__card">
-            <span class="work__card-media" :style="{ background: p.tint }" />
+            <span class="work__card-media" :style="cardMedia(p)" />
             <div class="work__card-info">
               <div class="work__card-head">
                 <h2 class="work__card-title">{{ p.title }}</h2>
@@ -134,7 +146,7 @@ const cardTo = (p) => (p.comingSoon ? undefined : `/work/${p.slug}`)
     <section class="work__grid container" data-theme-section="light">
       <div class="work__grid-list">
         <component :is="cardIs(p)" :to="cardTo(p)" v-for="p in grid" :key="p.slug" class="work__card">
-          <span class="work__card-media" :style="{ background: p.tint }" />
+          <span class="work__card-media" :style="cardMedia(p)" />
           <div class="work__card-info">
             <div class="work__card-head">
               <h2 class="work__card-title">{{ p.title }}</h2>
@@ -152,12 +164,22 @@ const cardTo = (p) => (p.comingSoon ? undefined : `/work/${p.slug}`)
       <div v-for="group in archive" :key="group.year" class="work__archive-group">
         <div class="work__archive-year"><span>{{ group.year }}</span></div>
         <div class="work__archive-rows">
-          <div v-for="row in group.items" :key="row.slug" class="work__archive-row">
+          <!-- Archived projects link OUT to the live site (new tab); no case-study
+               page. Rows without a live URL stay as plain, non-clickable divs. -->
+          <component
+            :is="row.liveUrl ? 'a' : 'div'"
+            v-for="row in group.items"
+            :key="row.slug"
+            :href="row.liveUrl || undefined"
+            :target="row.liveUrl ? '_blank' : undefined"
+            :rel="row.liveUrl ? 'noopener noreferrer' : undefined"
+            class="work__archive-row"
+          >
             <span class="work__archive-name">{{ row.title }}</span>
             <span class="work__archive-desc">{{ row.desc }}</span>
             <span v-if="row.awards" class="work__badge work__badge--award">{{ awardLabel(row.awards) }}</span>
             <span v-else-if="row.comingSoon" class="work__badge work__badge--soon">Coming soon</span>
-          </div>
+          </component>
         </div>
       </div>
     </section>
@@ -254,9 +276,10 @@ a.work__card:hover .work__card-title { color: var(--color-blue); } /* linked car
   border-top: 1px solid var(--color-ink);
 }
 .work__archive-row:first-child { border-top: 0; } /* group border is the first rule */
-.work__archive-name { grid-area: name; font-size: 1.5em; line-height: 1.1; } /* 24 */
+.work__archive-name { grid-area: name; font-size: 1.5em; line-height: 1.1; transition: color 0.3s ease; } /* 24 */
 .work__archive-desc { grid-area: desc; font-size: 1em; line-height: 1.1; opacity: 0.4; } /* 16 */
 .work__archive .work__badge { grid-area: badge; }
+a.work__archive-row:hover .work__archive-name { color: var(--color-blue); } /* linked (live-site) rows */
 
 /* === TABLET (≤991px; Figma node 15324-4958) ====================== */
 @media (max-width: 991px) {

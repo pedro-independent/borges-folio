@@ -1,0 +1,872 @@
+[
+  {
+    "options": {
+      "collapsible": true,
+      "collapsed": true
+    },
+    "fields": [
+      {
+        "description": "Overrides the browser tab / search title. ~50–60 characters.",
+        "name": "metaTitle",
+        "type": "string",
+        "title": "Meta title"
+      },
+      {
+        "rows": 2,
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "max",
+                "constraint": 160
+              }
+            ],
+            "level": "warning",
+            "message": "Keep under ~160 characters."
+          }
+        ],
+        "name": "metaDescription",
+        "type": "text",
+        "title": "Meta description"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "description": "Used when the page is shared (Open Graph / Twitter).",
+        "name": "ogImage",
+        "type": "image",
+        "title": "Social share image"
+      }
+    ],
+    "name": "seo",
+    "type": "object",
+    "title": "SEO"
+  },
+  {
+    "fields": [
+      {
+        "options": {
+          "list": [
+            {
+              "title": "LinkedIn",
+              "value": "linkedin"
+            },
+            {
+              "title": "Instagram",
+              "value": "instagram"
+            },
+            {
+              "title": "X / Twitter",
+              "value": "twitter"
+            },
+            {
+              "title": "Behance",
+              "value": "behance"
+            },
+            {
+              "title": "Dribbble",
+              "value": "dribbble"
+            },
+            {
+              "title": "Other",
+              "value": "other"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "linkedin",
+                  "instagram",
+                  "twitter",
+                  "behance",
+                  "dribbble",
+                  "other"
+                ]
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "platform",
+        "type": "string"
+      },
+      {
+        "description": "Shown text, e.g. \"LinkedIn\".",
+        "name": "label",
+        "type": "string"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "url",
+        "type": "url",
+        "title": "URL"
+      }
+    ],
+    "name": "socialLink",
+    "type": "object",
+    "title": "Social link"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "label",
+        "type": "string"
+      },
+      {
+        "description": "A path (\"/work\"), an in-page anchor (\"#work\"), or a full URL.",
+        "name": "href",
+        "type": "string",
+        "title": "Link"
+      }
+    ],
+    "name": "ctaLink",
+    "type": "object",
+    "title": "Button / link"
+  },
+  {
+    "fields": [
+      {
+        "initialValue": "Pedro Borges",
+        "name": "brandName",
+        "type": "string",
+        "title": "Brand name"
+      },
+      {
+        "initialValue": "UX/UI Designer",
+        "description": "Used in the browser tab title, e.g. \"UX/UI Designer\".",
+        "name": "tagline",
+        "type": "string",
+        "title": "Tagline / role"
+      },
+      {
+        "name": "logo",
+        "type": "image",
+        "title": "Logo (wordmark)"
+      },
+      {
+        "description": "Primary nav / footer links.",
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "label",
+                "type": "string"
+              },
+              {
+                "name": "href",
+                "type": "string",
+                "title": "Link"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "navItems",
+        "type": "array",
+        "title": "Navigation"
+      },
+      {
+        "name": "contactEmail",
+        "type": "string",
+        "title": "Contact email"
+      },
+      {
+        "initialValue": "Lisbon, Portugal",
+        "description": "e.g. \"Lisbon, Portugal\".",
+        "name": "locationLabel",
+        "type": "string",
+        "title": "Location label"
+      },
+      {
+        "initialValue": "Europe/Lisbon",
+        "description": "IANA name for the local clock, e.g. \"Europe/Lisbon\".",
+        "name": "timezone",
+        "type": "string",
+        "title": "Time zone"
+      },
+      {
+        "of": [
+          {
+            "type": "socialLink",
+            "title": "Social link"
+          }
+        ],
+        "name": "socials",
+        "type": "array",
+        "title": "Social links"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "defaultSeo",
+        "type": "seo",
+        "title": "Default SEO"
+      }
+    ],
+    "name": "siteSettings",
+    "type": "document",
+    "title": "General site settings"
+  },
+  {
+    "fields": [
+      {
+        "description": "Each line of the big hero heading; tick \"indent\" to push a line in.",
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "text",
+                "type": "string"
+              },
+              {
+                "initialValue": false,
+                "name": "indent",
+                "type": "boolean"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "heroHeading",
+        "type": "array",
+        "title": "Hero heading (lines)"
+      },
+      {
+        "rows": 3,
+        "name": "heroParagraph",
+        "type": "text",
+        "title": "Hero paragraph"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "heroImage",
+        "type": "image",
+        "title": "Hero background image"
+      },
+      {
+        "name": "introText",
+        "type": "string",
+        "title": "Intro text"
+      },
+      {
+        "name": "industriesLeftLabel",
+        "type": "string",
+        "title": "Left label"
+      },
+      {
+        "rows": 2,
+        "name": "industriesRightLabel",
+        "type": "text",
+        "title": "Right label"
+      },
+      {
+        "options": {
+          "layout": "tags"
+        },
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "industries",
+        "type": "array",
+        "title": "Industries list"
+      },
+      {
+        "initialValue": "My portfolio",
+        "name": "portfolioTitle",
+        "type": "string",
+        "title": "Section title"
+      },
+      {
+        "name": "portfolioCta",
+        "type": "ctaLink",
+        "title": "CTA"
+      },
+      {
+        "description": "Curate + order the home portfolio. Leave empty to auto-show featured projects.",
+        "of": [
+          {
+            "to": [
+              {
+                "type": "project"
+              }
+            ],
+            "type": "reference",
+            "title": "Reference to project"
+          }
+        ],
+        "name": "portfolioProjects",
+        "type": "array",
+        "title": "Projects shown"
+      },
+      {
+        "initialValue": "Contact",
+        "name": "contactLabel",
+        "type": "string",
+        "title": "Label"
+      },
+      {
+        "rows": 2,
+        "name": "contactHeading",
+        "type": "text",
+        "title": "Heading"
+      },
+      {
+        "name": "contactCta",
+        "type": "ctaLink",
+        "title": "CTA"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "heroAnnotations",
+        "type": "array",
+        "title": "Hero annotations"
+      },
+      {
+        "name": "industriesAnnotation",
+        "type": "string",
+        "title": "Industries annotation"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "portfolioAnnotations",
+        "type": "array",
+        "title": "Portfolio annotations"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "name": "homePage",
+    "type": "document",
+    "title": "Home"
+  },
+  {
+    "fields": [
+      {
+        "rows": 2,
+        "name": "introLede",
+        "type": "text",
+        "title": "Intro lede"
+      },
+      {
+        "rows": 2,
+        "name": "bioTitle",
+        "type": "text",
+        "title": "Bio title"
+      },
+      {
+        "rows": 2,
+        "name": "bioLead",
+        "type": "text",
+        "title": "Bio lead"
+      },
+      {
+        "rows": 6,
+        "name": "bioBody",
+        "type": "text",
+        "title": "Bio body"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "portrait",
+        "type": "image"
+      },
+      {
+        "name": "portraitCaption",
+        "type": "string",
+        "title": "Portrait caption"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "awardsImage",
+        "type": "image",
+        "title": "Awards image"
+      },
+      {
+        "rows": 3,
+        "name": "quoteText",
+        "type": "text",
+        "title": "Quote"
+      },
+      {
+        "name": "quoteAttribution",
+        "type": "string",
+        "title": "Attribution"
+      },
+      {
+        "description": "e.g. Professional Experience, Education, Certificates, Awards.",
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "title",
+                "type": "string",
+                "title": "Section title"
+              },
+              {
+                "of": [
+                  {
+                    "fields": [
+                      {
+                        "description": "Role / qualification / award.",
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "description": "Place · year, etc.",
+                        "name": "meta",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "name": "entries",
+                "type": "array"
+              }
+            ],
+            "type": "object",
+            "title": "Section"
+          }
+        ],
+        "name": "cvGroups",
+        "type": "array",
+        "title": "CV sections"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "name": "aboutPage",
+    "type": "document",
+    "title": "About"
+  },
+  {
+    "fields": [
+      {
+        "rows": 3,
+        "name": "quoteText",
+        "type": "text",
+        "title": "Quote"
+      },
+      {
+        "name": "quoteAttribution",
+        "type": "string",
+        "title": "Attribution"
+      },
+      {
+        "description": "Curate + order the Featured section. Leave empty to use each project’s \"Featured\" flag.",
+        "of": [
+          {
+            "to": [
+              {
+                "type": "project"
+              }
+            ],
+            "type": "reference",
+            "title": "Reference to project"
+          }
+        ],
+        "name": "featuredProjects",
+        "type": "array",
+        "title": "Featured projects"
+      },
+      {
+        "description": "The main project grid, in order. Coming-soon projects show a muted badge. The Archive below is derived automatically from each project’s \"Year\".",
+        "of": [
+          {
+            "to": [
+              {
+                "type": "project"
+              }
+            ],
+            "type": "reference",
+            "title": "Reference to project"
+          }
+        ],
+        "name": "gridProjects",
+        "type": "array",
+        "title": "Grid projects"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "name": "workPage",
+    "type": "document",
+    "title": "Work"
+  },
+  {
+    "fields": [
+      {
+        "initialValue": "Let's work together.",
+        "name": "heading",
+        "type": "string"
+      },
+      {
+        "initialValue": "I am reaching out about",
+        "name": "topicsLabel",
+        "type": "string",
+        "title": "Topics label"
+      },
+      {
+        "description": "The \"I am reaching out about\" options.",
+        "of": [
+          {
+            "fields": [
+              {
+                "description": "Stable key, e.g. \"full-time\".",
+                "name": "value",
+                "type": "string"
+              },
+              {
+                "name": "label",
+                "type": "string"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "topics",
+        "type": "array"
+      },
+      {
+        "initialValue": "Or just start a conversation at",
+        "name": "emailLabel",
+        "type": "string",
+        "title": "Email fallback label"
+      },
+      {
+        "initialValue": "Social",
+        "name": "socialTitle",
+        "type": "string",
+        "title": "Social section title"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "media",
+        "type": "image",
+        "title": "Media image"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "name": "contactPage",
+    "type": "document",
+    "title": "Contact"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "description": "e.g. \"Cyber Security · SaaS\".",
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "description": "Short line shown on cards (Work grid / home), e.g. \"B2B SaaS conversion-focused website\".",
+        "name": "subtitle",
+        "type": "string"
+      },
+      {
+        "rows": 3,
+        "description": "Longer summary used on the project detail page.",
+        "name": "description",
+        "type": "text"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "cover",
+        "type": "image",
+        "title": "Cover image"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "regex",
+                "constraint": {
+                  "pattern": "/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/",
+                  "name": "hex colour",
+                  "invert": false
+                }
+              }
+            ],
+            "level": "warning",
+            "message": "Use a hex colour like #cdb8f2."
+          }
+        ],
+        "description": "Hex colour used as the card / placeholder background, e.g. \"#cdb8f2\".",
+        "name": "tint",
+        "type": "string",
+        "title": "Placeholder tint"
+      },
+      {
+        "options": {
+          "layout": "tags"
+        },
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "services",
+        "type": "array"
+      },
+      {
+        "description": "Manual sort position (ascending). Drives the Archive order.",
+        "name": "sortOrder",
+        "type": "number",
+        "title": "Order"
+      },
+      {
+        "initialValue": false,
+        "description": "Show in the Work page \"Featured\" section.",
+        "name": "featured",
+        "type": "boolean"
+      },
+      {
+        "initialValue": false,
+        "description": "Mark as not-yet-published in the grid.",
+        "name": "comingSoon",
+        "type": "boolean",
+        "title": "Coming soon"
+      },
+      {
+        "description": "Used to group the Work \"Archive\".",
+        "name": "year",
+        "type": "number"
+      },
+      {
+        "description": "Number of awards (shown as a badge).",
+        "name": "awards",
+        "type": "number"
+      },
+      {
+        "rows": 3,
+        "name": "problem",
+        "type": "text"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "label",
+                "type": "string"
+              },
+              {
+                "name": "value",
+                "type": "string"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "outcomes",
+        "type": "array"
+      },
+      {
+        "options": {
+          "collapsible": true
+        },
+        "fields": [
+          {
+            "rows": 3,
+            "name": "statement",
+            "type": "text"
+          },
+          {
+            "name": "scope",
+            "type": "string"
+          },
+          {
+            "name": "methods",
+            "type": "string"
+          },
+          {
+            "of": [
+              {
+                "options": {
+                  "hotspot": true
+                },
+                "type": "image"
+              }
+            ],
+            "name": "media",
+            "type": "array"
+          }
+        ],
+        "name": "role",
+        "type": "object"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "heading",
+                "type": "string"
+              },
+              {
+                "rows": 4,
+                "name": "body",
+                "type": "text"
+              },
+              {
+                "options": {
+                  "hotspot": true
+                },
+                "name": "image",
+                "type": "image"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "decisions",
+        "type": "array",
+        "title": "Key decisions"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "name": "project",
+    "type": "document"
+  }
+]

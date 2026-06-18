@@ -12,8 +12,9 @@ export const SITE_SETTINGS = groq`*[_type == "siteSettings"][0]{
   defaultSeo
 }`
 
-// Reusable project-card projection (Work grid / featured / home).
-const CARD = groq`_id, title, subtitle, awards, comingSoon, featured, year, tint, "slug": slug.current`
+// Reusable project-card projection (Work grid / featured / home). `tint` is kept
+// as a graceful background fallback for existing data; new cards use `cover`.
+const CARD = groq`_id, title, subtitle, awards, comingSoon, year, tint, "cover": cover.asset->url, "slug": slug.current`
 
 // --- Pages ----------------------------------------------------------------
 export const HOME_PAGE = groq`*[_type == "homePage"][0]{
@@ -25,7 +26,6 @@ export const HOME_PAGE = groq`*[_type == "homePage"][0]{
   portfolioTitle, portfolioCta,
   "portfolioProjects": portfolioProjects[]->{ ${CARD} },
   contactLabel, contactHeading, contactCta,
-  heroAnnotations, industriesAnnotation, portfolioAnnotations,
   seo
 }`
 
@@ -42,7 +42,7 @@ export const WORK_PAGE = groq`*[_type == "workPage"][0]{
   quoteText, quoteAttribution,
   "featured": featuredProjects[]->{ ${CARD} },
   "grid": gridProjects[]->{ ${CARD} },
-  "archive": *[_type == "project" && defined(year)] | order(year desc, sortOrder asc){ ${CARD} },
+  "archive": archiveProjects[]->{ ${CARD}, liveUrl },
   seo
 }`
 

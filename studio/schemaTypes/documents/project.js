@@ -59,17 +59,6 @@ export default defineType({
       options: { hotspot: true },
     }),
     defineField({
-      name: 'tint',
-      type: 'string',
-      title: 'Placeholder tint',
-      group: 'overview',
-      description: 'Hex colour used as the card / placeholder background, e.g. "#cdb8f2".',
-      validation: (Rule) =>
-        Rule.regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, { name: 'hex colour' }).warning(
-          'Use a hex colour like #cdb8f2.',
-        ),
-    }),
-    defineField({
       name: 'services',
       type: 'array',
       title: 'Services',
@@ -87,14 +76,6 @@ export default defineType({
       description: 'Manual sort position (ascending). Drives the Archive order.',
     }),
     defineField({
-      name: 'featured',
-      type: 'boolean',
-      title: 'Featured',
-      group: 'listing',
-      description: 'Show in the Work page "Featured" section.',
-      initialValue: false,
-    }),
-    defineField({
       name: 'comingSoon',
       type: 'boolean',
       title: 'Coming soon',
@@ -108,6 +89,14 @@ export default defineType({
       title: 'Year',
       group: 'listing',
       description: 'Used to group the Work "Archive".',
+    }),
+    defineField({
+      name: 'liveUrl',
+      type: 'url',
+      title: 'Live website URL',
+      group: 'listing',
+      description:
+        'For archived projects: the archive row links here (the live site, opens in a new tab) instead of an internal case-study page.',
     }),
     defineField({
       name: 'awards',
