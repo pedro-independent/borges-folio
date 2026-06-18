@@ -18,6 +18,11 @@ const transitioning = useState('page-transitioning', () => false)
 // fire after onLeave when the destination has no async setup, leaving this at 0
 // so the frozen page snaps to the top instead of staying where the user was.
 let frozenScrollY = 0
+// A static snapshot of the footer the user is leaving, captured BEFORE the route
+// changes (the layout footer is re-keyed per route, so by onLeave it's already
+// the destination's). It rides inside the frozen outgoing card so the footer
+// scales down WITH the page instead of vanishing.
+let footerClone = null
 if (import.meta.client) {
   useRouter().beforeEach((to, from) => {
     frozenScrollY = window.scrollY
@@ -29,7 +34,37 @@ if (import.meta.client) {
     // then tears those triggers down itself (without reverting) once frozen.
     // Guard the initial load (no previous route) and same-path hash navigations,
     // which don't run the page transition, so the shell isn't left hidden.
-    if (from.matched.length && to.path !== from.path) transitioning.value = true
+    if (from.matched.length && to.path !== from.path) {
+      // Snapshot the footer the user is leaving and pin it as a fixed overlay
+      // EXACTLY over the real one, right now. The `is-transitioning` rule (CSS)
+      // hides + re-keys the real footer this same tick, but onLeave — which folds
+      // the snapshot into the scaling card — only runs once the incoming page's
+      // async setup resolves, a ~1–3 frame gap. Without this overlay the footer
+      // blanks out for those frames and then pops back: the flicker. The overlay
+      // covers that gap seamlessly; onLeave moves this same node into the card.
+      if (footerClone?.parentElement) footerClone.remove() // stale node (aborted nav)
+      const footerEl = document.querySelector('.footer')
+      if (footerEl) {
+        const r = footerEl.getBoundingClientRect()
+        const clone = footerEl.cloneNode(true)
+        clone.removeAttribute('id') // avoid a duplicate id while both briefly coexist
+        Object.assign(clone.style, {
+          position: 'fixed',
+          top: r.top + 'px',
+          left: r.left + 'px',
+          width: r.width + 'px',
+          margin: '0',
+          opacity: '1',
+          visibility: 'visible',
+          zIndex: '4',
+        })
+        document.body.appendChild(clone)
+        footerClone = clone
+      } else {
+        footerClone = null
+      }
+      transitioning.value = true
+    }
   })
 }
 
@@ -116,14 +151,27 @@ const pageTransition = {
       if (st.trigger && el.contains(st.trigger)) st.kill(!!st.pin)
     })
 
+    // Fold the footer overlay (pinned over the real footer since beforeEach) INTO
+    // the leaving card as its last child — the footer's natural spot. Stripping
+    // the fixed-overlay positioning returns it to normal flow at exactly the same
+    // viewport position it already held, so the hand-off is seamless; from here it
+    // scales down WITH the page. Measuring el.offsetHeight below now includes it,
+    // so the freeze reproduces the viewport (page + footer) 1:1. opacity/visibility
+    // stay inline (visible) to override the `.is-transitioning .footer` hide rule
+    // it now falls under. It's a child of el, so Vue drops it when the outgoing
+    // page unmounts after this leave completes.
+    if (footerClone) {
+      Object.assign(footerClone.style, { position: '', top: '', left: '', width: '', margin: '', zIndex: '' })
+      el.appendChild(footerClone)
+      footerClone = null
+    }
+
     // Freeze the outgoing page exactly where the user left it (top: -scrollY),
     // detached from flow, then send the document to the top for the incoming
     // page. The transform-origin is the viewport centre so it scales in place.
     //
     // `el` sits at the document top, so its own scroll offset equals
-    // frozenScrollY — freeze there to reproduce the viewport 1:1. The layout
-    // footer lives BELOW `el` (and is hidden for the transition), so wherever
-    // `el`'s content ends we simply show the page background; we must NOT pull
+    // frozenScrollY — freeze there to reproduce the viewport 1:1. We do NOT pull
     // the view up to `el`'s bottom (the old `min(frozenScrollY, offsetHeight-vh)`
     // did that, snapping the tall industries section into frame when the user
     // was down in the footer). Clamp ONLY if `el` has been scrolled entirely
@@ -135,6 +183,15 @@ const pageTransition = {
       top: -y,
       left: 0,
       width: '100%',
+      // The layout footer lives BELOW `el` and is hidden for the transition, so
+      // when the user navigates from the footer `el`'s content ends partway up
+      // the viewport and the blue <body> backdrop would show through the rest —
+      // the card looked "cut". Extend the frozen card DOWN to the viewport floor
+      // (with its own page background, set below) so it always fills the screen:
+      // no scroll snap, and the blue then only reads as the thin border the
+      // scale-down reveals. min-height (not height) so a normally-scrolled page,
+      // whose content already overflows the viewport, is never shortened.
+      minHeight: y + vh + 'px',
       overflow: 'hidden',          // clip content to the rounded corners
       borderRadius: '0.5em',         // present from the first frame (not animated in)
       zIndex: 5,
