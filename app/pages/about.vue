@@ -111,6 +111,7 @@ useSeoMeta({
     <!-- Intro -->
     <section class="about__intro container" data-theme-section="light">
       <h1 class="about__lede">{{ introLede }}</h1>
+      <AbAnnotations />
     </section>
 
     <!-- Lead / bio -->
@@ -132,6 +133,7 @@ useSeoMeta({
           <p class="about__bio-body">{{ bioBody }}</p>
         </div>
       </div>
+      <AbBioAnnotations />
     </section>
 
     <!-- Quote -->
@@ -173,6 +175,7 @@ useSeoMeta({
 
 /* Intro — large centred lede */
 .about__intro {
+  position: relative;               /* positioning context for the annotation layer */
   padding-top: 10.5em;              /* 168 */
   padding-bottom: 7.5em;            /* 120 */
   text-align: center;
@@ -186,6 +189,7 @@ useSeoMeta({
 
 /* Lead / bio — portrait aside left, copy right */
 .about__lead {
+  position: relative;               /* positioning context for the annotation layer */
   display: flex;
   align-items: flex-start;
   justify-content: space-between;

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, onMounted, onBeforeUnmount, resolveComponent } from 'vue'
+import { computed, reactive, ref, watch, onMounted, onBeforeUnmount, resolveComponent } from 'vue'
 import { CONTACT_PAGE } from '~/utils/sanityQueries'
 
 // Contact page copy from the contactPage singleton; email / socials / location /
@@ -98,8 +98,18 @@ function hideRing() {
 function onTopicHover(e) {
   // pointerenter also fires on touch — only follow a real mouse; focus always moves it
   if (e.type === 'pointerenter' && e.pointerType && e.pointerType !== 'mouse') return
+  // Only ring a NON-selected option — the selected one is already filled, so a
+  // ring around it is redundant. Hovering/focusing the selected one hides it.
+  if (e.currentTarget.classList.contains('is-selected')) {
+    hideRing()
+    return
+  }
   showRingAt(e.currentTarget)
 }
+
+// Selecting an option (click or keyboard) fills it — drop the ring so it never
+// lingers around the now-selected field; it returns when another option is hovered.
+watch(() => form.topic, hideRing)
 function onTopicsLeave() {
   // keep the ring if a radio inside still has keyboard focus
   if (topicsList.value?.contains(document.activeElement)) return

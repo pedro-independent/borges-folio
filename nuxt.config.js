@@ -3,6 +3,10 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-05-29',
   devtools: { enabled: true },
 
+  // Drop-in client-feedback tool (Figma-style comment pins). Self-contained layer
+  // in /feedback — remove this line (or set FEEDBACK_ENABLED=false) for launch.
+  extends: ['./feedback'],
+
   // Lenis base styles first, then the single project sheet
   // (resets → tokens → scaling → typography → layout → pages).
   css: ['lenis/dist/lenis.css', '~/assets/css/main.css', '~/assets/css/button-004.css', '~/assets/css/button-029.css', '~/assets/css/underline-link.css'],

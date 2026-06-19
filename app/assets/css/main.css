@@ -523,6 +523,51 @@ main { display: block; }
 .anno__note--ind-focal { top: 13.55em; left: 63.76em; }
 .anno__note--ind-focal p { transform: rotate(-4deg); }
 
+/* === ABOUT page marks (Figma frame 15324-4503; px ÷ 16 = em) =============
+   Numbered ring markers keyed to the "Organizing content" legend. The layers are
+   scoped to the intro + lead sections (each position:relative), so offsets are
+   measured from that section's top-left. */
+
+/* Shared numbered ring marker (circle + centred number) */
+.anno__mark { position: absolute; width: 1.4231em; height: 1.6406em; } /* 22.77 × 26.25 */
+.anno__mark-ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+.anno__mark-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.anno__mark-num p { font-size: 1em; line-height: 1; transform: rotate(4.9deg); } /* override the 2em note default */
+
+/* --- Intro: ellipse + "1" + legend --- */
+.anno--ab-intro { top: 0; }
+.anno__svg--ab-ellipse { left: 2.25em; top: 6.9em; width: 85.5em; height: 23em; }
+.anno__mark--ab-1 { left: 25.7em; top: 5.34em; }
+
+.anno__note--ab-legend {
+  left: 1.5em; top: 30.875em;       /* 24 / 494 */
+  font-family: var(--font-script);
+  color: var(--color-blue);
+  display: flex; flex-direction: column; gap: 0.5em;
+}
+.anno__note--ab-legend p { font-size: 0.75em; line-height: 1.5; } /* "Organizing content" — 12px */
+.ab-legend__row { display: flex; align-items: center; gap: 1.5em; margin: 0; padding: 0; list-style: none; }
+.ab-legend__chip { display: inline-flex; align-items: center; }
+.ab-legend__badge { position: relative; flex-shrink: 0; width: 2em; height: 2em; } /* 32px box */
+.ab-legend__ring { position: absolute; left: 0.25em; top: 0.3125em; width: 1.5em; height: 1.3125em; } /* 24 × 21 */
+.ab-legend__ring path { stroke: currentColor; stroke-width: 3; stroke-linecap: round; fill: none; }
+.ab-legend__num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1em; line-height: 1; }
+.ab-legend__label { font-size: 1em; line-height: 1.5; white-space: nowrap; }
+
+/* --- Lead/bio: markers 2–5 + arrows (offsets from the lead section top) --- */
+.anno--ab-bio { top: 0; }
+.anno__mark--ab-2     { left: 58.2em;  top: 4.26em; }
+.anno__svg--ab-a2long { left: 54.1em;  top: 5.47em;  width: 2.64em;  height: 5.1em; }
+.anno__svg--ab-a2head { left: 54.24em; top: 10.21em; width: 0.58em;  height: 0.93em; }
+.anno__mark--ab-5     { left: 27em;    top: 6.07em; }
+.anno__mark--ab-3     { left: 65.7em;  top: 19.01em; }
+.anno__svg--ab-a3h1   { left: 64.4em;  top: 19.8em;  width: 0.78em;  height: 1.15em; }
+.anno__svg--ab-a3h2   { left: 64.19em; top: 20.58em; width: 0.57em;  height: 0.62em; }
+.anno__mark--ab-4     { left: 52.84em; top: 29.88em; }
+.anno__svg--ab-a4top  { left: 53.54em; top: 26.625em; width: 1.33em; height: 2.93em; }
+.anno__svg--ab-a4bot  { left: 53.57em; top: 31.875em; width: 1.14em; height: 2.15em; }
+.anno__mark--ab-quote { left: 8.375em; top: 43.14em; }
+
 /* === PAGE: INTRO ========================================== */
 .intro {
   padding: 15em 1.5em 7.5em;        /* 240 / 120 */
