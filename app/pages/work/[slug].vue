@@ -41,6 +41,16 @@ useSeoMeta({
   title: () => project.value?.seo?.metaTitle || project.value?.title,
   description: () => project.value?.seo?.metaDescription || project.value?.description,
 })
+
+// Cover media: a real uploaded image (Sanity URL) renders as a cover-fit photo;
+// the legacy hex `tint` stays a flat background. Mirrors work/index.js cardMedia.
+const coverStyle = computed(() => {
+  const cover = project.value?.cover
+  if (cover && /^(https?:|\/)/.test(cover)) {
+    return { backgroundImage: `url(${cover})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+  }
+  return { background: cover || project.value?.tint }
+})
 </script>
 
 <template>
@@ -66,7 +76,7 @@ useSeoMeta({
 
     <!-- Cover -->
     <section class="case__cover container">
-      <div class="case__cover-img" :style="{ background: project.cover || project.tint }" />
+      <div class="case__cover-img" :style="coverStyle" />
     </section>
 
     <!-- The problem -->

@@ -493,7 +493,10 @@ main { display: block; }
 }
 
 /* --- Hero marks --- */
-.anno__svg--hero { top: 0; left: 0; width: 100%; height: auto; }
+/* Width in em (1440 ÷ 16) — not 100% — so it caps at the 1920 container
+   ceiling alongside the em-anchored notes/headline; otherwise it tracks the
+   raw viewport and the strokes drift right of the notes above 1920px wide. */
+.anno__svg--hero { top: 0; left: 0; width: 90em; height: auto; }
 .anno__note--hero-whitespace  { top: 11.5em;   left: 10.4375em; }  /* 184 / 167 */
 .anno__note--hero-focus       { top: 33.25em;  left: 5em; }        /* 532 / 80 */
 .anno__note--hero-composition { top: 51.125em; left: 68.5em; }     /* 818 / 1096 */
