@@ -98,11 +98,12 @@ const cv = computed(() => {
   return FALLBACK_CV
 })
 
-useSeoMeta({
+useSeo({
   title: () => cms.value.seo?.metaTitle || 'About',
   description: () =>
     cms.value.seo?.metaDescription ||
     'Pedro Borges — a UX/UI designer focused on intentional design decisions rooted in psychology and perception.',
+  image: () => cms.value.seo?.ogImage,
 })
 </script>
 

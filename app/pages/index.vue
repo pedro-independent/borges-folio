@@ -8,11 +8,12 @@ import { HOME_PAGE } from '~/utils/sanityQueries'
 const { data } = await useSanityQuery('homePage', HOME_PAGE, {}, { lazy: import.meta.client })
 const cms = computed(() => data.value || {})
 
-useSeoMeta({
+useSeo({
   title: () => cms.value.seo?.metaTitle || '',
   description: () =>
     cms.value.seo?.metaDescription ||
     'Pedro Borges — an awarded designer specialized in psychology-driven design decisions. A selection of UX/UI projects across multiple industries.',
+  image: () => cms.value.seo?.ogImage,
 })
 </script>
 

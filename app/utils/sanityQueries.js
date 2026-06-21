@@ -4,12 +4,16 @@ import groq from 'groq'
 // missing image simply yields null and the component falls back to its local
 // /img asset. Page docs are singletons (one each); projects are a collection.
 
+// Reusable SEO projection — resolves the social share image to a plain URL so a
+// missing one yields null (the page then falls back to the default OG image).
+const SEO = groq`metaTitle, metaDescription, "ogImage": ogImage.asset->url`
+
 // --- Global ---------------------------------------------------------------
 export const SITE_SETTINGS = groq`*[_type == "siteSettings"][0]{
   brandName, tagline, contactEmail, locationLabel, timezone,
   socials[]{platform, label, url},
   navItems[]{label, href},
-  defaultSeo
+  defaultSeo{ ${SEO} }
 }`
 
 // Reusable project-card projection (Work grid / featured / home). `tint` is kept
@@ -26,7 +30,7 @@ export const HOME_PAGE = groq`*[_type == "homePage"][0]{
   portfolioTitle, portfolioCta,
   "portfolioProjects": portfolioProjects[]->{ ${CARD} },
   contactLabel, contactHeading, contactCta,
-  seo
+  seo{ ${SEO} }
 }`
 
 export const ABOUT_PAGE = groq`*[_type == "aboutPage"][0]{
@@ -35,7 +39,7 @@ export const ABOUT_PAGE = groq`*[_type == "aboutPage"][0]{
   "awardsImage": awardsImage.asset->url,
   quoteText, quoteAttribution,
   cvGroups[]{ title, entries[]{ label, meta } },
-  seo
+  seo{ ${SEO} }
 }`
 
 export const WORK_PAGE = groq`*[_type == "workPage"][0]{
@@ -43,7 +47,7 @@ export const WORK_PAGE = groq`*[_type == "workPage"][0]{
   "featured": featuredProjects[]->{ ${CARD} },
   "grid": gridProjects[]->{ ${CARD} },
   "archive": archiveProjects[]->{ ${CARD}, liveUrl },
-  seo
+  seo{ ${SEO} }
 }`
 
 export const CONTACT_PAGE = groq`*[_type == "contactPage"][0]{
@@ -51,7 +55,7 @@ export const CONTACT_PAGE = groq`*[_type == "contactPage"][0]{
   topics[]{ value, label },
   emailLabel, socialTitle,
   "media": media.asset->url,
-  seo
+  seo{ ${SEO} }
 }`
 
 // --- Projects -------------------------------------------------------------
@@ -65,7 +69,7 @@ export const PROJECT_BY_SLUG = groq`*[_type == "project" && slug.current == $slu
   outcomes[]{ label, value },
   role{ statement, scope, methods, "media": media[].asset->url },
   decisions[]{ heading, body, "image": image.asset->url },
-  seo
+  seo{ ${SEO} }
 }`
 
 // Slugs for prerendering / static generation of project pages.

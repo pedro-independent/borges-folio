@@ -37,9 +37,16 @@ if (!project.value) {
   throw createError({ statusCode: 404, statusMessage: 'Project not found', fatal: true })
 }
 
-useSeoMeta({
+useSeo({
+  type: 'article',
   title: () => project.value?.seo?.metaTitle || project.value?.title,
   description: () => project.value?.seo?.metaDescription || project.value?.description,
+  // Prefer an explicit social image, else the case-study cover (a real uploaded
+  // photo URL makes the best share card); the default handles tint-only covers.
+  image: () => {
+    const img = project.value?.seo?.ogImage || project.value?.cover
+    return img && /^https?:/.test(img) ? img : undefined
+  },
 })
 
 // Cover media: a real uploaded image (Sanity URL) renders as a cover-fit photo;

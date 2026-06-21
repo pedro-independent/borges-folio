@@ -1,5 +1,44 @@
 <script setup>
-useHead({ titleTemplate: (t) => (t ? `${t} — Pedro Borges` : 'Pedro Borges — UX/UI Designer') })
+// Title suffix shared with useSeo's og:title (formatTitle) so they never drift.
+useHead({ titleTemplate: formatTitle })
+
+// Site-wide structured data (JSON-LD): a Person for the designer and a WebSite
+// for the domain. Helps search engines build a knowledge panel and rich results.
+// Absolute URLs come from the single siteUrl source (set NUXT_PUBLIC_SITE_URL).
+const { siteUrl } = useRuntimeConfig().public
+const seoBase = (siteUrl || '').replace(/\/$/, '')
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Person',
+            '@id': `${seoBase}/#person`,
+            name: 'Pedro Borges',
+            url: seoBase,
+            jobTitle: 'UX/UI Designer',
+            image: `${seoBase}/img/borges_hero.jpg`,
+            sameAs: [
+              'https://www.linkedin.com/in/pedrosmborges/',
+              'https://www.instagram.com/pedro.sm.borges/',
+            ],
+          },
+          {
+            '@type': 'WebSite',
+            '@id': `${seoBase}/#website`,
+            url: seoBase,
+            name: 'Pedro Borges — UX/UI Designer',
+            publisher: { '@id': `${seoBase}/#person` },
+            inLanguage: 'en',
+          },
+        ],
+      }),
+    },
+  ],
+})
 
 // Grab the Nuxt app once in setup so the transition hooks can reach $lenis
 // (provided by the client plugin) without calling useNuxtApp() outside context.

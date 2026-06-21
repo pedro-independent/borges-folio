@@ -16,6 +16,11 @@ export default defineNuxtConfig({
   // Sanity creds exposed to the client read-only via runtimeConfig.public.
   runtimeConfig: {
     public: {
+      // Production base URL — single source of truth for canonical tags, og:url,
+      // robots.txt and sitemap.xml. SET THIS before launch via the host env var
+      // NUXT_PUBLIC_SITE_URL (e.g. https://pedroborges.com). The placeholder
+      // below is only a dev fallback and MUST be overridden in production.
+      siteUrl: 'https://example.com',
       sanity: {
         projectId: process.env.SANITY_PROJECT_ID,
         dataset: process.env.SANITY_DATASET || 'production',

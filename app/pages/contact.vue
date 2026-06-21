@@ -63,11 +63,12 @@ function onSubmit() {
   window.location.href = `mailto:${email.value}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
-useSeoMeta({
+useSeo({
   title: () => cms.value.seo?.metaTitle || 'Contact',
   description: () =>
     cms.value.seo?.metaDescription ||
     'Let’s work together — reach out to Pedro Borges about a full-time role, a freelance project, or anything else.',
+  image: () => cms.value.seo?.ogImage,
 })
 
 // --- Topic option ring ---------------------------------------------------

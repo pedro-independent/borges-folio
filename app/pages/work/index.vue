@@ -73,11 +73,12 @@ const archive = computed(() => (data.value?.archive?.length ? groupByYear(data.v
 const quoteText = computed(() => data.value?.quoteText || FALLBACK.quoteText)
 const quoteAttribution = computed(() => data.value?.quoteAttribution || FALLBACK.quoteAttribution)
 
-useSeoMeta({
+useSeo({
   title: () => data.value?.seo?.metaTitle || 'Work',
   description: () =>
     data.value?.seo?.metaDescription ||
     'Selected work by Pedro Borges — UX/UI design for SaaS, healthcare, and brand platforms, including award-winning projects.',
+  image: () => data.value?.seo?.ogImage,
 })
 
 const awardLabel = (n) => `${n} award${n > 1 ? 's' : ''}`
