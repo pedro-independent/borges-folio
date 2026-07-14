@@ -29,7 +29,7 @@ const rightLabel = computed(
 //
 // `.industries` is a tall runway; while its extra height scrolls past, the sticky
 // child stays latched and a scrubbed (un-pinned) GSAP tween translates the list
-// upward, so items rise through the position-based focus-band mask on
+// upward, items hard-clipping at the overflow-hidden window edges of
 // .industries__list. The runway height is set here to `sticky height + distance`
 // so the child stays stuck for exactly the tween's travel — and the contact
 // section sits flush below, with no empty gap once the list finishes.
@@ -59,10 +59,10 @@ onMounted(() => {
     }
     sizeRunway()
 
-    // Mirror the CSS `top: 7.5em` so the scrub starts the instant the sticky child
-    // latches. 7.5em leaves room for the hand-drawn ellipse that overhangs the
-    // list top by ~5em (≈ 5em overhang + 2.5em gap of the fluid body font).
-    const topGap = () => parseFloat(getComputedStyle(document.body).fontSize) * 7.5
+    // Read the CSS sticky `top` (a 50vh-centering calc) RESOLVED to px, so the
+    // scrub starts the instant the sticky child latches — CSS is the single
+    // source of truth and the two can't drift.
+    const topGap = () => parseFloat(getComputedStyle(sticky.value).top) || 0
 
     const tween = gsap.to(track.value, {
       y: () => -distance(),

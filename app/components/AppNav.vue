@@ -68,7 +68,7 @@ function setup() {
           ease: 'none',
           scrollTrigger: {
             start: 0,
-            end: () => window.innerHeight * 0.7,
+            end: () => window.innerHeight * 0.4,
             scrub: true,
             invalidateOnRefresh: true,
           },
