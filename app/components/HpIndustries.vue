@@ -44,12 +44,13 @@ onMounted(() => {
   mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
     const list = track.value.parentElement
 
-    // Translate until the LAST item has risen up THROUGH and out of the focus band
-    // (+15% of the list height past its offset), based on the last item's real
-    // offset (not scrollHeight) so trailing space can't short it. offsetTop is
+    // Translate until the LAST item's top reaches the TOP of the list window:
+    // every other item rises up and out, and the last one comes to rest
+    // visible at the top. The mostly-emptied window this leaves at the end is
+    // overlapped by the contact section (negative margin, see .contact in
+    // main.css) so no dead cream gap scrolls by. offsetTop is
     // transform-independent, so this is stable to call mid-scrub.
-    const distance = () =>
-      Math.max(0, track.value.lastElementChild.offsetTop + list.clientHeight * 0.15)
+    const distance = () => Math.max(0, track.value.lastElementChild.offsetTop)
 
     // Sticky element of height H inside a runway of height H + D stays stuck for
     // exactly D px of scroll (the `top` offset cancels out) — so D = the tween's

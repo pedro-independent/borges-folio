@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 // Socials + nav from siteSettings (shared, non-blocking; falls back to the
 // hardcoded set until the fetch lands).
@@ -34,6 +34,13 @@ const ctaTarget = computed(() =>
 const photoTint = computed(() => nextProject.value?.tint || null)
 let done = false
 
+// Live seconds until the auto-advance fires — shown in the hand-drawn
+// "Good things come to those who wait [n]" note (Figma 290:14449). Mirrors
+// the CTA timeline: counts down while it plays, freezes when it pauses
+// (footer off-screen), races on hover fast-fill and rewinds with the reset.
+// Under reduced motion the timeline never runs, so it stays a static [12].
+const secondsLeft = ref(12)
+
 function goCta(e) {
   e?.preventDefault?.()
   if (done) return
@@ -60,9 +67,14 @@ onMounted(() => {
 
     // 12s total: the label fills first (10.5s), then the arrow (1.5s).
     // Only the auto-fill (not the hover fast-fill) redirects on completion.
-    const tl = gsap.timeline({ paused: true, onComplete: () => { if (!hovering) goCta() } })
+    const tl = gsap.timeline({
+      paused: true,
+      onComplete: () => { if (!hovering) goCta() },
+      onUpdate: () => { secondsLeft.value = Math.max(0, Math.ceil(tl.duration() - tl.time())) },
+    })
     tl.to(el, { '--wm-fill': 1, duration: 10.5, ease: 'none' }, 0)
       .to(el, { '--ar-fill': 1, duration: 1.5, ease: 'none' }, 10.5)
+    secondsLeft.value = Math.ceil(tl.duration())
 
     const enter = () => {
       hovering = true
@@ -149,5 +161,12 @@ onBeforeUnmount(() => mm?.revert())
         </div>
       </a>
     </div>
+
+    <!-- Hand-drawn note (Figma 290:14449); [n] counts down the auto-advance -->
+    <AnnotationLayer class="anno--footer">
+      <div class="anno__note anno__note--ft-wait">
+        <p>Good things come to<br />those who wait [{{ secondsLeft }}]</p>
+      </div>
+    </AnnotationLayer>
   </footer>
 </template>

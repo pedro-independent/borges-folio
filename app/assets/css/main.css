@@ -320,7 +320,7 @@ main { display: block; }
 .page.is-transitioning .footer { opacity: 0; visibility: hidden; }
 
 /* === FOOTER =============================================== */
-.footer { padding-top: 7.5em; }     /* 120px */
+.footer { position: relative; padding-top: 7.5em; }  /* 120px; positioned for .anno--footer */
 .footer__inner {
   display: flex;
   flex-direction: column;
@@ -505,8 +505,31 @@ main { display: block; }
 .anno__note--hero-composition p { transform: rotate(-2.39deg); }
 
 /* --- Portfolio marks (Figma frame 48095811) ---
-   The "dramatic" group is anchored to the "My portfolio" wordmark, the rest to
-   the first project card (the two have slightly different rhythm than Figma). */
+   Two layers with different scroll behavior: the "dramatic" group (wordmark-
+   anchored) is a plain overlay that scrolls away with the header; the hatch +
+   "spacing" group rides the sticky .portfolio__anno-pin so it stays fixed on
+   screen, registered with the card stack, while it builds. Both keep the
+   original Figma section-frame coordinates. */
+.portfolio__anno-pin {
+  /* First child of .portfolio__rows with the SAME sticky top and box height
+     as a desktop card row — so it latches when card 1 latches and, because
+     sticky containment ends with the rows, unpins with the pile the moment
+     the stack animation ends. Both synced by construction. The flow height is
+     cancelled on the FIRST CARD (negative margin-top, rule below), NOT via a
+     negative bottom margin here: sticky release clamps the MARGIN box, so a
+     negative own margin would defer the unpin by the full box height. */
+  position: sticky;
+  top: calc(50vh - 12.25em);
+  height: 24.5em;
+  margin: 0 -3.125em;         /* sides: back out of the container gutter */
+  z-index: 2;                 /* above the stacked cards */
+  pointer-events: none;       /* the box covers the top card — let clicks through */
+}
+.portfolio__anno-pin + .project { margin-top: -24.5em; }
+/* The pin's flow origin is the rows top; the marks' coordinates are authored
+   in the section frame — shift the layer origin up by the title block
+   (15em wordmark + 6.6875em margin) so they keep reading in that frame. */
+.portfolio__anno-pin .anno { top: -21.6875em; bottom: auto; }
 .anno--portfolio { top: 0; }
 .anno__note--pf-dramatic      { left: 9.05em;   top: -4.35em; }  /* above the wordmark */
 .anno__svg--pf-dramatic-arrow { left: 16.18em;  top: -0.08em; width: 3.625em;   height: 2.6875em; }
@@ -517,6 +540,17 @@ main { display: block; }
 .anno__note--pf-spacing       { left: 71.46em;  top: 40.22em; }
 .anno__note--pf-dramatic p { transform: rotate(-6deg); }
 .anno__note--pf-spacing p  { transform: rotate(-5deg); }
+
+/* --- Footer mark (Figma 290:14449) ---
+   "Good things come to those who wait [n]" — the [n] is live, counting down
+   the footer CTA's auto-advance (AppFooter.vue). Frame coordinates transfer
+   directly: the footer's 7.5em padding-top matches the Figma frame. */
+.anno--footer { top: 0; }
+.anno__note--ft-wait { left: 61.875em; top: 11.43em; }  /* 990 / 183 */
+/* nowrap: the Figma width fit a single-digit [8]; the live two-digit countdown
+   ([12]…[10]) would otherwise intermittently wrap to a third line as digit
+   widths change, making the note jump. The <br> carries the intended break. */
+.anno__note--ft-wait p { white-space: nowrap; transform: rotate(-7.05deg); }
 
 /* --- Industries marks (Figma frame 48095808) --- */
 .anno--industries { top: 0; }
@@ -530,6 +564,13 @@ main { display: block; }
    Numbered ring markers keyed to the "Organizing content" legend. The layers are
    scoped to the intro + lead sections (each position:relative), so offsets are
    measured from that section's top-left. */
+
+/* The about marks are drawn with a finer pen than the homepage ones: the
+   Figma vectors here carry ~1.67px strokes (legend rings 1px), not the 3px
+   of the hero/portfolio/industries marks that the global .anno__svg rule
+   assumes. viewBoxes render ≈1:1 at the 1440 frame, so units ≈ px. */
+.anno--ab-intro .anno__svg path,
+.anno--ab-bio .anno__svg path { stroke-width: 1.67; }
 
 /* Shared numbered ring marker (circle + centred number) */
 .anno__mark { position: absolute; width: 1.4231em; height: 1.6406em; } /* 22.77 × 26.25 */
@@ -553,7 +594,7 @@ main { display: block; }
 .ab-legend__chip { display: inline-flex; align-items: center; }
 .ab-legend__badge { position: relative; flex-shrink: 0; width: 2em; height: 2em; } /* 32px box */
 .ab-legend__ring { position: absolute; left: 0.25em; top: 0.3125em; width: 1.5em; height: 1.3125em; } /* 24 × 21 */
-.ab-legend__ring path { stroke: currentColor; stroke-width: 3; stroke-linecap: round; fill: none; }
+.ab-legend__ring path { stroke: currentColor; stroke-width: 1; stroke-linecap: round; fill: none; }
 .ab-legend__num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1em; line-height: 1; }
 .ab-legend__label { font-size: 1em; line-height: 1.5; white-space: nowrap; }
 
@@ -583,6 +624,20 @@ main { display: block; }
 
 /* === PAGE: PORTFOLIO ====================================== */
 .portfolio { position: relative; isolation: isolate; padding-bottom: 12.5em; }
+/* Inside the home stage the portfolio PARKS while the industries section is
+   latched. HpPortfolio.vue sets the geometry: a negative `top` parks it the
+   instant its content bottom meets the latching industries block, and its
+   box is extended downward (padding) by the industries block height — with
+   the industries section pulled up by the same amount — so the containment
+   push (.home__stage ends with the industries runway) lands at the EXACT
+   scroll where the industries block releases. Both then ride up together in
+   flow-lockstep: no overlap, no cover, reads as normal scrolling. Scoped to
+   the wrapper: without it (or below 768px, where industries never latches)
+   the portfolio scrolls normally. `top` stays auto until the JS sets it, so
+   this rule alone changes nothing. */
+@media (min-width: 768px) {
+  .home__stage .portfolio { position: sticky; }
+}
 .portfolio__title {
   text-align: center;
   white-space: nowrap;
@@ -732,8 +787,22 @@ main { display: block; }
 
 /* === PAGE: CONTACT ======================================== */
 .contact {
-  padding: 0 1.5em;
+  padding: 12.5em 1.5em 0;
   text-align: center;
+  /* Positioned so it paints (and receives clicks) ABOVE the transparent
+     industries runway box it overlaps below — see the margin rule. */
+  position: relative;
+}
+/* The industries scrub sends the list up its 48.125em window until only the
+   LAST item rests at the top, which would leave the emptied remainder as
+   dead cream between the two sections. Where the scrub runs, pull the
+   contact up INTO the spent window region: sized so the heading enters the
+   fold trailing the rising list and never touches it (both move 1:1 with
+   scroll during the scrub), coming to rest below the parked last item.
+   Elsewhere (mobile, reduced motion) the list never empties, so the contact
+   stays in normal flow. */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .contact { margin-top: -44.5em; }
 }
 .contact__inner {
   display: flex;

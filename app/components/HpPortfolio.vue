@@ -55,8 +55,56 @@ const section = useTemplateRef('section')
 let mm = null
 
 onMounted(() => {
-  const { gsap } = useGSAP()
+  const { gsap, ScrollTrigger } = useGSAP()
   mm = gsap.matchMedia()
+
+  // The scrub triggers need a FLOW-STABLE trigger element (one whose rect a
+  // mid-scroll refresh can trust). The section itself parks (sticky) while the
+  // industries block is latched, so use the .home__stage wrapper instead — it
+  // shares the section's top edge, so the same offsets hold. Fall back to the
+  // section when unwrapped (the park CSS is scoped to the wrapper, so the
+  // section is flow-static in that case anyway).
+  const stage = section.value.closest('.home__stage') || section.value
+
+  // Park the portfolio while the industries block (next in the stage) is
+  // latched, and release it IN SYNC with that block. Three coupled pieces,
+  // all measured from the industries block so main.css stays the source:
+  //  - top = latch line − content height → parks the instant the content
+  //    bottom meets the latching industries block (they're flow-adjacent).
+  //  - padding-bottom += industries block height, industries margin-top −=
+  //    the same → net-zero layout, but the sticky BOX now ends exactly where
+  //    the industries block's box ends. Sticky containment (.home__stage)
+  //    therefore pushes this section at the SAME scroll where the industries
+  //    block releases — both ride up in flow-lockstep afterwards, portfolio
+  //    bottom kissing the industries top, reading as normal scrolling
+  //    instead of one section sliding over the other.
+  // Mirrors the ≥768px tier of the industries latch.
+  mm.add('(min-width: 768px)', () => {
+    const el = section.value
+    const basePad = parseFloat(getComputedStyle(el).paddingBottom) || 0
+    const industries = document.querySelector('.industries')
+    const block = document.querySelector('.industries__sticky')
+    const park = () => {
+      if (!industries || !block) return // no industries section — never park
+      const latch = parseFloat(getComputedStyle(block).top)
+      if (Number.isNaN(latch)) return
+      const blockH = block.offsetHeight
+      el.style.paddingBottom = basePad + blockH + 'px'
+      industries.style.marginTop = -blockH + 'px'
+      // offsetHeight includes the extended padding — subtract it back to park
+      // the CONTENT bottom (CTA + original padding) at the latch line.
+      el.style.top = latch - (el.offsetHeight - blockH) + 'px'
+    }
+    park()
+    ScrollTrigger.addEventListener('refreshInit', park) // re-measure with every refresh
+    return () => {
+      ScrollTrigger.removeEventListener('refreshInit', park)
+      el.style.top = ''
+      el.style.paddingBottom = ''
+      if (industries) industries.style.marginTop = ''
+    }
+  })
+
   // `all` always matches — one context for every width; `reduce` only gates the
   // scale (real motion). The opacity crossfade is the reduced-motion-safe cue
   // and keeps stacked metas from overlapping, so it runs regardless.
@@ -73,15 +121,15 @@ onMounted(() => {
       // on this one the instant this row latches — the covering window runs
       // from this row's latch to the next row's latch. Positions come from
       // offsetTop (flow layout, unaffected by sticky latching) against the
-      // section — which is position:relative and never sticky — so a
-      // ScrollTrigger.refresh() while earlier rows are already latched can't
-      // corrupt the start/end values. stickyTop reads the CSS `top` calc
-      // resolved to px, so the JS follows the per-tier values in main.css.
+      // stage — which never leaves flow and shares the section's top edge —
+      // so a ScrollTrigger.refresh() while rows are latched (or the section
+      // is parked) can't corrupt the start/end values. stickyTop reads the
+      // CSS `top` calc resolved to px, following the per-tier values.
       const stickyTop = () => parseFloat(getComputedStyle(row).top) || 0
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: section.value,
+          trigger: stage,
           start: () => `top+=${row.offsetTop - stickyTop()} top`,
           end: () => `+=${next.offsetTop - row.offsetTop}`,
           scrub: true,
@@ -117,6 +165,13 @@ onBeforeUnmount(() => {
     <h2 class="portfolio__title"><span class="t-display-xl">{{ title }}</span></h2>
 
     <div class="portfolio__rows">
+      <!-- Card-anchored marks (hatch + "spacing" note). Lives INSIDE the rows
+           with the same sticky top and box height as a card row, so it pins
+           the instant card 1 latches and UNPINS with the pile when the stack
+           animation ends — both synced by construction, not by tuned offsets. -->
+      <div class="portfolio__anno-pin">
+        <HpPortfolioAnnotations class="anno--portfolio" />
+      </div>
       <article v-for="(p, i) in props.projects" :key="p.title" class="project">
         <!-- spacer first when text is on the right -->
         <div v-if="textRight(i)" class="project__spacer" />
@@ -162,6 +217,7 @@ onBeforeUnmount(() => {
       <AppButton class="btn btn--dark" :href="cta.href" :label="cta.label" />
     </div>
 
-    <HpPortfolioAnnotations class="anno--portfolio" />
+    <!-- wordmark-anchored marks: plain overlay, scrolls away with the header -->
+    <HpPortfolioAnnotationsDramatic class="anno--portfolio" />
   </section>
 </template>

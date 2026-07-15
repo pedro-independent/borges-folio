@@ -1,18 +1,14 @@
 <script setup>
-// Portfolio hand-drawn annotations (desktop only). Paths exported from Figma.
+// Card-anchored portfolio marks (hatch box + "spacing" note), desktop only.
+// Paths exported from Figma. Rendered inside .portfolio__anno-pin — a 0-height
+// sticky layer that latches in sync with the first card, so these marks stay
+// fixed on screen, registered with the latched card stack, while it builds.
+// The wordmark-anchored "dramatic sizing" marks live in
+// HpPortfolioAnnotationsTitle.vue, inside the sticky title.
 </script>
 
 <template>
   <AnnotationLayer>
-    <!-- "dramatic sizing" → arrow up to the "My portfolio" wordmark -->
-    <div class="anno__note anno__note--pf-dramatic"><p>dramatic sizing to create<br />immediate impact</p></div>
-    <svg class="anno__svg anno__svg--pf-dramatic-arrow" viewBox="0 0 58 43" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M56.3909 40.7803C41.8667 27.519 27.3741 11.999 8.83538 4.22475C8.06498 3.90167 -1.39128 0.519561 2.39094 1.7803" />
-    </svg>
-    <svg class="anno__svg anno__svg--pf-dramatic-head" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M11.5003 1.50024C12.0252 2.45163 19.7182 15.49 15.2225 16.3891C10.8199 17.2696 5.78211 15.3566 1.50027 14.5002" />
-    </svg>
-
     <!-- hatched box over the first project -->
     <svg class="anno__svg anno__svg--pf-hatch" viewBox="0 0 613 471" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g stroke="currentColor" stroke-width="3" stroke-linecap="round">
