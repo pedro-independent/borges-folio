@@ -1,10 +1,21 @@
-// Builds seed.ndjson — a migration of the site's current hardcoded content into
-// Sanity, so the CMS starts populated and the front-end renders real documents.
+// Builds seed.ndjson — a one-time bootstrap of the site's original hardcoded
+// content into Sanity, so a FRESH dataset starts populated.
 //
 //   node build-seed.mjs            # writes ./seed.ndjson
 //
-// Then import it (from the studio dir, after `npx sanity login`):
-//   npx sanity dataset import seed/seed.ndjson production --replace
+// ⚠️  DO NOT import this into `production` any more. It was a bootstrap, and the
+// production dataset has since diverged: content has been written directly in
+// the Studio that exists in no file here (e.g. Leafwell's entire case study —
+// problem, 3 outcomes, 5 key decisions — plus ClickGuard's uploaded cover).
+// `dataset import --replace` overwrites documents by _id, so it would replace
+// those with this file's thinner versions and destroy that work.
+//
+// To change the SHAPE of live documents, write a migration instead — it edits
+// in place and touches only the fields it names:
+//   npx sanity migration run <name> --project <id> --dataset production
+// See migrations/caseStudyToPortableText for the structured-fields → rich-text
+// conversion. This file stays useful for seeding a brand-new/empty dataset:
+//   npx sanity dataset import seed/seed.ndjson <new-dataset>
 //
 // Notes:
 // - Singletons use fixed _ids (siteSettings/homePage/aboutPage/workPage/contactPage)
@@ -22,6 +33,31 @@ const keyed = (arr) => arr.map((item, i) => ({ _key: `k${i}`, ...item }))
 // Build an ordered reference list to project documents.
 const refs = (slugs) => slugs.map((s) => ({ _type: 'reference', _ref: `project-${s}`, _key: s }))
 
+// --- Case-study Portable Text builders (mirror app/utils/portableCase.js) --
+// h2 = "Section label" (starts a labelled row on the site), h3 = heading,
+// h4 = small label, stats = facts row. Images are intentionally NOT seeded —
+// the client drops them into the rich text in the Studio (the front-end's
+// local fallback shows placeholder tints until then). Keys are deterministic
+// so re-running this script produces an identical file.
+let ptN = 0
+const ptKey = () => `pt${(ptN++).toString(36)}`
+const block = (style, text) => ({
+  _type: 'block',
+  _key: ptKey(),
+  style,
+  markDefs: [],
+  children: [{ _type: 'span', _key: ptKey(), text, marks: [] }],
+})
+const ptLabel = (t) => block('h2', t)
+const ptHeading = (t) => block('h3', t)
+const ptSub = (t) => block('h4', t)
+const ptP = (t) => block('normal', t)
+const ptFacts = (...pairs) => ({
+  _type: 'stats',
+  _key: ptKey(),
+  items: pairs.map(([label, value]) => ({ _key: ptKey(), label, value })),
+})
+
 // --- Projects (each item is one project) ---------------------------------
 const projectSource = [
   {
@@ -36,31 +72,40 @@ const projectSource = [
     description:
       'B2B SaaS platform protecting ad spend by detecting and blocking fraudulent clicks across Google, Meta, and Microsoft Ads.',
     services: ['Strategy', 'Information Architecture', 'UX Copy', 'UX/UI Design', 'Design System', 'Rebranding'],
+    liveUrl: 'https://clickguard.com',
     problem: 'A 58-page website that confused users, buried value, and lost to a free Google default.',
-    outcomes: [
-      { label: 'Pages', value: '58 → fewer' },
-      { label: 'Recognition', value: '1× Award' },
-      { label: 'Conversion Rate', value: '+29%' },
-    ],
-    role: {
-      statement:
+    body: [
+      ptLabel('Made at'),
+      ptP('Duall'),
+
+      ptLabel('Team involved'),
+      ptFacts(['Design', 'Pedro Borges'], ['Development', 'Pedro Neves']),
+
+      ptLabel('Outcomes'),
+      ptFacts(['Pages', '58 → fewer'], ['Recognition', '1× Award'], ['Conversion Rate', '+29%']),
+
+      ptLabel('My role'),
+      ptHeading(
         "Lead UX/UI Designer at duall®studio, working with an Art Director, dev team, and directly with the client's CEO and marketing team",
-      scope: 'Full rebrand · Website redesign · Information architecture · UX copy · Design system',
-      methods: 'Heatmap analysis · Click tracking · A/B testing',
-    },
-    decisions: [
-      {
-        heading: "Lead with the cost of inaction, not the product's features",
-        body: "For an audience with a free alternative already installed, features aren't the trigger, the cost of not acting is. We restructured the homepage to open with what undetected click fraud actually costs: wasted budget, distorted campaign data, and decisions made on corrupted numbers. ClickGuard enters the page as the answer to a problem the user already feels, not as a pitch they need to evaluate.",
-      },
-      {
-        heading: "Rebuild the pricing page around the user's decision, not the product taxonomy",
-        body: 'The original layout stacked packages vertically, price visible only on the first line, feature comparison requiring the user to scroll hundreds of rows while mentally tracking which column they were in. We moved to a side-by-side table with sticky package name and price, shortened feature descriptions to scannable one-liners, and reduced visual noise. The page now works the way a purchase decision actually works, comparing options at a glance, with context always visible.',
-      },
-      {
-        heading: 'Design for scan, write for experts',
-        body: "Performance marketers scan pages — they don't read them. The previous site demanded attention before earning it. We rebuilt every key page around scannability: short UX copy, clear section hierarchy, value proposition legible within seconds. We didn't simplify the language — writing to this audience's level was itself a trust signal. A tool that sounds like it understands PPC is more credible to a PPC specialist than one that explains it to them.",
-      },
+      ),
+      ptSub('Scope'),
+      ptP('Full rebrand · Website redesign · Information architecture · UX copy · Design system'),
+      ptSub('Methods'),
+      ptP('Heatmap analysis · Click tracking · A/B testing'),
+
+      ptLabel('Key decisions'),
+      ptHeading("Lead with the cost of inaction, not the product's features"),
+      ptP(
+        "For an audience with a free alternative already installed, features aren't the trigger, the cost of not acting is. We restructured the homepage to open with what undetected click fraud actually costs: wasted budget, distorted campaign data, and decisions made on corrupted numbers. ClickGuard enters the page as the answer to a problem the user already feels, not as a pitch they need to evaluate.",
+      ),
+      ptHeading("Rebuild the pricing page around the user's decision, not the product taxonomy"),
+      ptP(
+        'The original layout stacked packages vertically, price visible only on the first line, feature comparison requiring the user to scroll hundreds of rows while mentally tracking which column they were in. We moved to a side-by-side table with sticky package name and price, shortened feature descriptions to scannable one-liners, and reduced visual noise. The page now works the way a purchase decision actually works, comparing options at a glance, with context always visible.',
+      ),
+      ptHeading('Design for scan, write for experts'),
+      ptP(
+        "Performance marketers scan pages — they don't read them. The previous site demanded attention before earning it. We rebuilt every key page around scannability: short UX copy, clear section hierarchy, value proposition legible within seconds. We didn't simplify the language — writing to this audience's level was itself a trust signal. A tool that sounds like it understands PPC is more credible to a PPC specialist than one that explains it to them.",
+      ),
     ],
   },
   {
@@ -87,8 +132,54 @@ const projectSource = [
     services: ['Brand', 'Art Direction', 'UX/UI Design'],
   },
 
+  // Grid
+  {
+    slug: 'plen-advogados',
+    title: 'Plen Advogados',
+    subtitle: 'Law firm brand & website',
+    category: 'Legal · Law Firm',
+    tint: '#d8e0ea',
+    description:
+      "Corporate and M&A law firm founded in 2007, ranked by Chambers & Partners. Serving international clients from Lisbon's Amoreiras Tower.",
+    services: ['Strategy', 'Information Architecture', 'UX Copy', 'UX/UI Design', 'SEO'],
+    problem: 'A Chambers-ranked law firm with a website that looked and felt like it was built in 2000.',
+    body: [
+      ptLabel('Outcomes'),
+      ptFacts(['Pages', '58 → fewer'], ['Recognition', '1× Award'], ['Conversion Rate', '+29%']),
+
+      ptLabel('My role'),
+      ptHeading('Lead and sole UX/UI Designer — working directly with the client throughout'),
+      ptSub('Scope'),
+      ptP('Full website redesign · IA restructure · Brand application · Motion design (Barba.js)'),
+      ptSub('Branding'),
+      ptP('Brand identity by Alfred Agency — we applied and extended it across the full digital experience'),
+
+      ptLabel('Analysis'),
+      ptHeading('The existing website had 15 pages — but they were fragmented, thin, and structurally confused.'),
+      ptP(
+        'The team was split across three separate pages (partners, associates, trainees), each too short to rank or inform. Practice area pages were isolated silos with barely enough content to justify existing. There was no narrative, no reason to keep reading, and no path guiding the user anywhere.',
+      ),
+
+      ptLabel('Key decisions'),
+      ptHeading('Design the tension between authority and approachability, not one or the other'),
+      ptP(
+        'Most law firm websites resolve this tension by picking a side: either cold and institutional, or warm and startup-like. Both felt wrong for Plen. Their partners are senior, internationally recognised, and serious, but their philosophy is explicitly that of the lawyer-consultant, accessible and business-oriented. The design had to hold both at once.',
+      ),
+      ptP(
+        'We achieved this through editorial layouts with generous white space that signal confidence without coldness, high-quality photography that humanises the team, and language that is clear without being casual. The reference was closer to a premium financial services brand than a traditional law firm.',
+      ),
+      ptHeading('Make the team the centrepiece, not a footnote'),
+      ptP(
+        "In the previous site, the team was fragmented across three separate pages — partners, associates, trainees — each shallow and hard to navigate. The people are Plen's most credible asset: Chambers-ranked, decades of experience, recognised names in Portuguese corporate law. We consolidated the team into a single, richly designed experience, with individual member pages that function almost like editorial profiles — premium photography, detailed bios, areas of expertise, notable work. For an international client evaluating whether to engage a Portuguese law firm, this is the page that makes the decision.",
+      ),
+      ptHeading('Use motion to signal craft, not decoration'),
+      ptP(
+        "We implemented seamless page transitions using Barba.js, something essentially absent from the Portuguese legal sector online. The decision wasn't aesthetic. In a sector where every competitor's website feels static and dated, smooth transitions communicate modernity and intentionality without a single word of copy. A client visiting three law firm websites in a row will feel the difference immediately, even if they can't articulate why. The experience itself becomes part of the trust signal.",
+      ),
+    ],
+  },
+
   // Grid — coming soon
-  { slug: 'plen-advogados', title: 'Plen Advogados', subtitle: 'Law firm brand & website', tint: '#d8e0ea', comingSoon: true },
   { slug: 'opterion', title: 'Opterion', subtitle: 'Fintech dashboard product design', tint: '#e7ddca', comingSoon: true },
   { slug: 'omniscience', title: 'Omniscience', subtitle: 'AI analytics marketing site', tint: '#d3ddd5', comingSoon: true },
   { slug: 'nova-mentorship', title: 'Nova | Mentorship', subtitle: 'Executive education platform', tint: '#ecd9c6', comingSoon: true },
@@ -121,10 +212,9 @@ const projectDoc = (p, i) => {
   if (p.comingSoon) doc.comingSoon = true
   if (typeof p.year === 'number') doc.year = p.year
   if (typeof p.awards === 'number') doc.awards = p.awards
+  if (p.liveUrl) doc.liveUrl = p.liveUrl
   if (p.problem) doc.problem = p.problem
-  if (p.outcomes) doc.outcomes = keyed(p.outcomes)
-  if (p.role) doc.role = p.role
-  if (p.decisions) doc.decisions = keyed(p.decisions)
+  if (p.body) doc.body = p.body
   return doc
 }
 

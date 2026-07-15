@@ -62,13 +62,15 @@ export const CONTACT_PAGE = groq`*[_type == "contactPage"][0]{
 export const ALL_PROJECT_CARDS = groq`*[_type == "project"] | order(sortOrder asc, title asc){ ${CARD} }`
 
 export const PROJECT_BY_SLUG = groq`*[_type == "project" && slug.current == $slug][0]{
-  title, subtitle, category, description, awards, tint,
+  title, subtitle, category, description, awards, tint, liveUrl,
   "cover": cover.asset->url,
   services,
   problem,
-  outcomes[]{ label, value },
-  role{ statement, scope, methods, "media": media[].asset->url },
-  decisions[]{ heading, body, "image": image.asset->url },
+  body[]{
+    ...,
+    _type == "image" => { "url": asset->url, alt, half },
+    _type == "stats" => { items[]{ _key, label, value, "image": image.asset->url } }
+  },
   seo{ ${SEO} }
 }`
 

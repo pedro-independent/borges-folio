@@ -140,7 +140,7 @@ useSeo({
     <!-- Quote -->
     <section class="about__quote container" data-theme-section="light">
       <blockquote class="about__quote-inner">
-        <span class="about__quote-mark" aria-hidden="true">“</span>
+        <IconQuote class="about__quote-mark" />
         <p class="about__quote-text">
           {{ quoteText }}
           <br />— {{ quoteAttribution }}
@@ -242,11 +242,8 @@ useSeo({
   flex-direction: column;
   gap: 1.5em;
 }
-.about__quote-mark {
-  font-size: 2.5em;
-  line-height: 0.5;
-  color: var(--color-accent);
-}
+/* Same mark as the work page's blockquote (IconQuote, 29 × 25). */
+.about__quote-mark { width: 1.8125em; height: auto; color: var(--color-ink); }
 .about__quote-text { font-size: 2.5em; line-height: 1.2; } /* 40 */
 
 /* CV — right-aligned column with a decorative image to its left */
@@ -297,6 +294,7 @@ useSeo({
   .about__lede { font-size: 3.75em; }      /* 60px */
   .about__cv-media { display: none; }
   .about__bio { width: 32.5em; }
+  .about__quote-mark { width: 1.5em; }     /* 24 — matches the work page */
 }
 
 /* === MOBILE (≤479px) — single column ============================== */

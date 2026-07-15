@@ -15,7 +15,7 @@ const FALLBACK = {
   ],
   grid: [
     { title: 'ClickGuard', desc: 'B2B SaaS conversion-focused website', awards: 1, slug: 'clickguard', tint: '#cdb8f2' },
-    { title: 'Plen Advogados', desc: 'Law firm brand & website', comingSoon: true, slug: 'plen-advogados', tint: '#d8e0ea' },
+    { title: 'Plen Advogados', desc: 'Law firm brand & website', slug: 'plen-advogados', tint: '#d8e0ea' },
     { title: 'Opterion', desc: 'Fintech dashboard product design', comingSoon: true, slug: 'opterion', tint: '#e7ddca' },
     { title: 'Omniscience', desc: 'AI analytics marketing site', comingSoon: true, slug: 'omniscience', tint: '#d3ddd5' },
     { title: 'Nova | Mentorship', desc: 'Executive education platform', comingSoon: true, slug: 'nova-mentorship', tint: '#ecd9c6' },

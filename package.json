@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@portabletext/vue": "^1.0.14",
     "@sanity/client": "^6.21.3",
     "@sanity/image-url": "^1.0.2",
     "groq": "^3.50.0",

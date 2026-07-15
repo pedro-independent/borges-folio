@@ -2,6 +2,7 @@
 import seo from './objects/seo'
 import socialLink from './objects/socialLink'
 import ctaLink from './objects/ctaLink'
+import stats from './objects/stats'
 
 // Documents
 import siteSettings from './documents/siteSettings'
@@ -16,6 +17,7 @@ export const schemaTypes = [
   seo,
   socialLink,
   ctaLink,
+  stats,
   // Documents
   siteSettings,
   homePage,

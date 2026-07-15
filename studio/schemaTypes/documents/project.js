@@ -107,56 +107,68 @@ export default defineType({
     }),
 
     // --- Case study ---
-    defineField({ name: 'problem', type: 'text', rows: 3, title: 'Problem', group: 'caseStudy' }),
     defineField({
-      name: 'outcomes',
-      type: 'array',
-      title: 'Outcomes',
+      name: 'problem',
+      type: 'text',
+      rows: 3,
+      title: 'The problem',
       group: 'caseStudy',
-      of: [
-        {
-          type: 'object',
-          fields: [
-            defineField({ name: 'label', type: 'string', title: 'Label' }),
-            defineField({ name: 'value', type: 'string', title: 'Value' }),
-          ],
-          preview: { select: { title: 'value', subtitle: 'label' } },
-        },
-      ],
+      description: 'The one-sentence hook shown large under the cover, e.g. "A 58-page website that confused users…".',
     }),
     defineField({
-      name: 'role',
-      type: 'object',
-      title: 'Role',
-      group: 'caseStudy',
-      options: { collapsible: true },
-      fields: [
-        defineField({ name: 'statement', type: 'text', rows: 3, title: 'Statement' }),
-        defineField({ name: 'scope', type: 'string', title: 'Scope' }),
-        defineField({ name: 'methods', type: 'string', title: 'Methods' }),
-        defineField({
-          name: 'media',
-          type: 'array',
-          title: 'Media',
-          of: [{ type: 'image', options: { hotspot: true } }],
-        }),
-      ],
-    }),
-    defineField({
-      name: 'decisions',
+      name: 'body',
       type: 'array',
-      title: 'Key decisions',
+      title: 'Case study',
       group: 'caseStudy',
+      description:
+        'The whole case study. "Section label" starts a new labelled row (Outcomes, My role, Key decisions…) — ' +
+        'the label sits in the left column, everything after it flows in the right column until the next label. ' +
+        '"Heading" is the big statement style, "Small label" the tiny field name (Scope, Methods). ' +
+        'Add images anywhere — tick "Half width" on two images in a row to pair them side by side — ' +
+        'and "Facts row" blocks for stats or the team list.',
       of: [
         {
-          type: 'object',
-          fields: [
-            defineField({ name: 'heading', type: 'string', title: 'Heading' }),
-            defineField({ name: 'body', type: 'text', rows: 4, title: 'Body' }),
-            defineField({ name: 'image', type: 'image', title: 'Image', options: { hotspot: true } }),
+          type: 'block',
+          styles: [
+            { title: 'Normal', value: 'normal' },
+            { title: 'Section label', value: 'h2' },
+            { title: 'Heading', value: 'h3' },
+            { title: 'Small label', value: 'h4' },
           ],
-          preview: { select: { title: 'heading' } },
+          lists: [
+            { title: 'Bullet', value: 'bullet' },
+            { title: 'Numbered', value: 'number' },
+          ],
+          marks: {
+            decorators: [
+              { title: 'Bold', value: 'strong' },
+              { title: 'Italic', value: 'em' },
+            ],
+            annotations: [
+              {
+                name: 'link',
+                type: 'object',
+                title: 'Link',
+                fields: [defineField({ name: 'href', type: 'url', title: 'URL', validation: (Rule) => Rule.uri({ scheme: ['http', 'https', 'mailto'], allowRelative: true }) })],
+              },
+            ],
+          },
         },
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            defineField({ name: 'alt', type: 'string', title: 'Alt text', description: 'Describes the image for screen readers and SEO.' }),
+            defineField({
+              name: 'half',
+              type: 'boolean',
+              title: 'Half width',
+              description: 'Two consecutive half-width images sit side by side.',
+              initialValue: false,
+            }),
+          ],
+        },
+        { type: 'stats' },
       ],
     }),
 

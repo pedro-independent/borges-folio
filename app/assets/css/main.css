@@ -160,6 +160,11 @@ body {
 .page { position: relative; overflow: clip; }
 main { display: block; }
 
+/* FOUC guard for the masked line reveal (plugins/text-reveal.client.js):
+   tagged text stays hidden until the plugin splits it (or shows it plainly
+   when SplitText/motion is unavailable). */
+[data-split='heading'] { visibility: hidden; }
+
 /* === TYPOGRAPHY UTILITIES =================================
    Names mirror the role of each Figma text style; sizes in `em`. */
 .t-display-xl { font-size: 15em;   line-height: 1; } /* 240px — "My portfolio" */
@@ -443,6 +448,10 @@ main { display: block; }
 }
 .hero__h1 .t-h1 { line-height: 1.2; } /* 48px line box */
 .hero__h1 .hero__h1-indent { text-align: right; }
+/* While the reveal has the heading split (text-reveal.client.js), the spans
+   sit inline inside block line divs instead of being blockified flex items —
+   re-block the indent span so its text-align keeps working mid-animation. */
+.hero__h1 .split-line .hero__h1-indent { display: block; }
 
 /* Intro paragraph — lower-right box. */
 .hero__paragraph {
@@ -658,11 +667,15 @@ main { display: block; }
   display: flex;
   flex-direction: column;
 }
-/* Consecutive cards overlap in flow (negative margin, no gap) so the incoming
-   card is always riding over the stuck one's bottom edge — the stream of cards
-   is never visually separated, per the reference. The overlap also keeps the
-   receding card's shrinking bottom edge hidden behind the card covering it. */
-.project + .project { margin-top: -3em; }
+/* Consecutive cards meet EXACTLY edge to edge — no gap, and no overlap either.
+   A negative margin here would start each card already inside the previous one,
+   so the instant a card latched the next one would be biting a slice out of its
+   bottom while both are still full-size: it reads as two cards colliding, not
+   stacking. Touching is enough to keep the stream unbroken, because from the
+   first pixel of scroll the incoming card's top climbs the card's full height
+   (24.5em per window) while the covered card's shrinking bottom edge rises only
+   ~1.2em per step — the climber always outruns it, so the edge stays hidden. */
+.project + .project { margin-top: 0; }
 /* Extra containment height so the finished pile holds for a beat after the
    last card lands, instead of releasing the instant it arrives. */
 .portfolio__rows::after { content: ''; height: 25vh; }

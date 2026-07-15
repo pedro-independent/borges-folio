@@ -110,38 +110,70 @@ onMounted(() => {
   // and keeps stacked metas from overlapping, so it runs regardless.
   mm.add({ all: 'all', reduce: '(prefers-reduced-motion: reduce)' }, (ctx) => {
     const rows = gsap.utils.toArray('.project', section.value)
+    const last = rows[rows.length - 1]
     const triggers = []
 
+    // Cards overlap in flow (see main.css), so the next card starts gaining on
+    // this one the instant this row latches — one covering window runs from
+    // each row's latch to the next row's latch. Positions come from offsetTop
+    // (flow layout, unaffected by sticky latching) against the stage — which
+    // never leaves flow and shares the section's top edge — so a
+    // ScrollTrigger.refresh() while rows are latched (or the section is parked)
+    // can't corrupt the start/end values. stickyTop reads the CSS `top` calc
+    // resolved to px, following the per-tier values.
+    const stickyTop = (row) => parseFloat(getComputedStyle(row).top) || 0
+    const startAt = (row) => `top+=${row.offsetTop - stickyTop(row)} top`
+
+    // Depth cue: a card recedes one STEP for EVERY card that stacks on top of
+    // it, so the pile reads as receding steps (card n−1 smallest) rather than
+    // every covered card flattening to one shared size — with a single shrink
+    // the second and third cards ended up the same scale and looked aligned.
+    // One tween per card spanning latch → last latch does this in a single
+    // pass: windows are equal (equal row heights), so linear travel over
+    // `covers` windows lands exactly one step per window, and each media has
+    // exactly one tween touching it (no fromTo start-value races between
+    // overlapping scrubs). The step matches the size difference the reference
+    // pile reads at: ~10% between neighbours, small enough to stay a depth cue
+    // rather than a shrink.
+    const STEP = 0.1
+    if (!ctx.conditions.reduce) {
+      rows.slice(0, -1).forEach((row, i) => {
+        const covers = rows.length - 1 - i
+        const tween = gsap.fromTo(
+          row.querySelector('.project__media'),
+          { scale: 1 },
+          {
+            scale: 1 - covers * STEP,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: stage,
+              start: () => startAt(row),
+              end: () => `+=${last.offsetTop - row.offsetTop}`,
+              scrub: true,
+              invalidateOnRefresh: true,
+            },
+          },
+        )
+        triggers.push(tween.scrollTrigger)
+      })
+    }
+
+    // Meta fade, scrubbed to this card's own covering window only: hold it
+    // readable through the first 40% of the approach, then fade out before the
+    // cover lands — without it the metas of rows 1/3 (and 2/4) would pile up in
+    // the same spot once stacked.
     rows.slice(0, -1).forEach((row, i) => {
       const next = rows[i + 1]
-      const media = row.querySelector('.project__media')
-      const meta = row.querySelector('.project__meta')
-
-      // Cards overlap in flow (see main.css), so the next card starts gaining
-      // on this one the instant this row latches — the covering window runs
-      // from this row's latch to the next row's latch. Positions come from
-      // offsetTop (flow layout, unaffected by sticky latching) against the
-      // stage — which never leaves flow and shares the section's top edge —
-      // so a ScrollTrigger.refresh() while rows are latched (or the section
-      // is parked) can't corrupt the start/end values. stickyTop reads the
-      // CSS `top` calc resolved to px, following the per-tier values.
-      const stickyTop = () => parseFloat(getComputedStyle(row).top) || 0
-
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: stage,
-          start: () => `top+=${row.offsetTop - stickyTop()} top`,
+          start: () => startAt(row),
           end: () => `+=${next.offsetTop - row.offsetTop}`,
           scrub: true,
           invalidateOnRefresh: true,
         },
       })
-      // Recede across the whole window; hold the meta readable through the
-      // first 40% of the approach, then fade it out before the cover lands.
-      // 0.88 keeps the shrink clearly visible while the risen bottom edge
-      // (H·(1−s)/2 ≈ 24px desktop) stays hidden behind the −3em card overlap.
-      if (!ctx.conditions.reduce) tl.to(media, { scale: 0.88, ease: 'none', duration: 1 }, 0)
-      tl.to(meta, { autoAlpha: 0, ease: 'none', duration: 0.6 }, 0.4)
+      tl.to(row.querySelector('.project__meta'), { autoAlpha: 0, ease: 'none', duration: 0.6 }, 0.4)
       triggers.push(tl.scrollTrigger)
     })
 

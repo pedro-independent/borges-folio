@@ -28,7 +28,7 @@ const paragraph = computed(() => props.paragraph || FALLBACK_PARAGRAPH)
       <img src="/img/borges_hero.jpg" alt="" />
     </div>
 
-    <h1 class="hero__h1">
+    <h1 class="hero__h1" data-split="heading">
       <span
         v-for="(line, i) in heading"
         :key="i"
@@ -39,7 +39,7 @@ const paragraph = computed(() => props.paragraph || FALLBACK_PARAGRAPH)
     </h1>
 
     <div class="hero__paragraph">
-      <p class="t-body">{{ paragraph }}</p>
+      <p class="t-body" data-split="heading">{{ paragraph }}</p>
     </div>
 
     <HpHeroAnnotations />
