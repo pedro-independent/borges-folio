@@ -297,6 +297,7 @@ onBeforeUnmount(() => clearInterval(clock))
   flex-shrink: 0;
   width: 43.375em;                  /* 694 */
   height: 40.9375em;                /* 655 */
+  border-radius: 0.25em;            /* 4 */
   background: linear-gradient(135deg, #c9c4ba 0%, #b6b1a6 100%);
 }
 
