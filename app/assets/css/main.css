@@ -564,10 +564,11 @@ main { display: block; }
 /* --- Industries marks (Figma frame 48095808) --- */
 .anno--industries { top: 0; }
 .anno__svg--ind-ellipse     { left: 24.19em;  top: -5em;    width: 41.8125em; height: 16.875em; }
-.anno__svg--ind-focal-arrow { left: 63.1em;   top: 10.2em;  width: 1.625em;   height: 2.75em; }
-.anno__svg--ind-focal-head  { left: 62.975em; top: 9.34em;  width: 0.875em;   height: 1.375em; }
-.anno__note--ind-focal { top: 13.55em; left: 63.76em; }
-.anno__note--ind-focal p { transform: rotate(-4deg); }
+/* Figma 178:594/595 — rotated bounding boxes of the 132.61°-baked vectors. */
+.anno__svg--ind-focal-arrow { left: 62.48em;  top: 8.97em;  width: 4.84em;    height: 4.56em; }
+.anno__svg--ind-focal-head  { left: 61.52em;  top: 8.655em; width: 1.586em;   height: 1.6em; }
+.anno__note--ind-focal { top: 12.84em; left: 63.76em; }   /* 205 / 1020 */
+.anno__note--ind-focal p { transform: rotate(-2.39deg); }
 
 /* === ABOUT page marks (Figma frame 15324-4503; px ÷ 16 = em) =============
    Numbered ring markers keyed to the "Organizing content" legend. The layers are

@@ -65,9 +65,63 @@ onMounted(() => {
     // source of truth and the two can't drift.
     const topGap = () => parseFloat(getComputedStyle(sticky.value).top) || 0
 
+    // --- Diagonal entry ------------------------------------------------
+    // Each word slides in from the right as it rises, so its path through the
+    // window reads as a diagonal. The offset is computed from each word's live
+    // position rather than given a per-item ScrollTrigger: the track is
+    // transform-scrubbed, and ScrollTrigger bakes trigger positions from
+    // getBoundingClientRect at refresh — on a moving element those go stale the
+    // moment the scrub starts. Screen position = the list's rect top +
+    // offsetTop (layout, transform-independent) + the track's current y, which
+    // stays exact at any scroll progress.
+    const items = gsap.utils.toArray('li', track.value)
+    const setX = items.map((el) => gsap.quickSetter(el, 'x', 'px'))
+    // The entry zone is measured against the VIEWPORT, not the list window: the
+    // window is ~770px tall but latches at 42vh, so its bottom sits well below
+    // the fold. Keying the fan to the window's bottom edge would spend almost
+    // all of it off-screen (measured: ~8px of visible travel). Words therefore
+    // start their slide as they cross into the bottom ENTRY band of the screen
+    // and are aligned by the top of it. `overflow: hidden` on the list clips the
+    // offset words, so they emerge from its right edge.
+    const ENTRY = 0.4 // band height, × viewport height
+    const TRAVEL = 0.45 // offset at the band's bottom, × list width
+    // Eased so a word decelerates into alignment instead of arriving linearly.
+    const ease = gsap.parseEase('power2.in')
+
+    let tops = []
+    let winH = 0
+    let vh = 0
+    let bandH = 0
+    let maxX = 0
+    // Per-item layout reads happen ONLY here (on refresh); the per-frame update
+    // below reads a single rect, so reads and writes never interleave per item.
+    const measure = () => {
+      tops = items.map((el) => el.offsetTop)
+      winH = list.offsetHeight
+      vh = window.innerHeight
+      bandH = vh * ENTRY
+      maxX = list.offsetWidth * TRAVEL
+    }
+    const drawEntry = () => {
+      // One rect read for the window's screen position — covers both phases
+      // (scrolling in, then latched) without special-casing either. Transform
+      // changes don't invalidate layout, so this stays cheap.
+      const listTop = list.getBoundingClientRect().top
+      const ty = gsap.getProperty(track.value, 'y') // from GSAP's cache, no layout
+      // Words enter at the fold — or at the window's own bottom edge once that
+      // rises above it (end of the section).
+      const enterY = Math.min(listTop + winH, vh)
+      const settleY = enterY - bandH
+      for (let i = 0; i < items.length; i++) {
+        const p = (listTop + tops[i] + ty - settleY) / bandH
+        setX[i](ease(gsap.utils.clamp(0, 1, p)) * maxX)
+      }
+    }
+
     const tween = gsap.to(track.value, {
       y: () => -distance(),
       ease: 'none',
+      onUpdate: drawEntry, // tween frames, so scrub LAG stays in sync too
       scrollTrigger: {
         trigger: runway.value,
         start: () => 'top top+=' + topGap(),
@@ -77,9 +131,31 @@ onMounted(() => {
         onRefreshInit: sizeRunway, // re-measure before ScrollTrigger reads positions
       },
     })
+    // The scrub only runs once latched, but the words are on screen before that
+    // — this spans the whole runway so they also slide while the section is
+    // still scrolling into view.
+    const entry = ScrollTrigger.create({
+      trigger: runway.value,
+      start: 'top bottom',
+      end: 'bottom top',
+      onUpdate: drawEntry,
+      onRefresh: () => {
+        measure() // after ScrollTrigger has settled the layout
+        drawEntry()
+      },
+    })
+    measure()
+    drawEntry()
     // The web font can change list metrics after mount — recompute once it's ready.
     if (document.fonts?.ready) document.fonts.ready.then(() => ScrollTrigger.refresh())
-    return () => tween.scrollTrigger?.kill()
+    return () => {
+      tween.scrollTrigger?.kill()
+      entry.kill()
+      // quickSetter writes bypass matchMedia's revert bookkeeping, so clear the
+      // offsets by hand or they'd survive a context revert (e.g. a width change
+      // crossing into the mobile tier, where the list is static).
+      gsap.set(items, { x: 0 })
+    }
   })
 })
 
