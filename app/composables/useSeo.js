@@ -15,7 +15,9 @@ export const formatTitle = (t) => (t ? `${t} — Pedro Borges` : 'Pedro Borges �
 const BRAND = 'Pedro Borges'
 const DEFAULT_DESCRIPTION =
   'Pedro Borges — an awarded UX/UI designer specialised in psychology-driven design decisions, with selected work across multiple industries.'
-const DEFAULT_OG_IMAGE = '/img/borges_hero.jpg'
+// Case-sensitive path — must match the file (ShareImage.jpg, 2400×1260) exactly
+// on the Linux deploy host. Per-page images (project covers) override it.
+const DEFAULT_OG_IMAGE = '/img/ShareImage.jpg'
 
 const resolve = (v) => (typeof v === 'function' ? v() : v)
 

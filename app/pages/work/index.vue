@@ -81,7 +81,9 @@ useSeo({
   image: () => data.value?.seo?.ogImage,
 })
 
-const awardLabel = (n) => `${n} award${n > 1 ? 's' : ''}`
+// Title case ("1 Award" / "3 Awards") per the new design — badges are no longer
+// CSS-uppercased, so the capital lives in the string.
+const awardLabel = (n) => `${n} Award${n > 1 ? 's' : ''}`
 // Published cards link to their case study; coming-soon ones stay plain <article>.
 // resolveComponent is needed so `<component :is>` renders a real <a>, not a
 // literal <nuxtlink> element.
@@ -143,7 +145,7 @@ const cardMedia = (p) =>
       </blockquote>
     </section>
 
-    <!-- Project grid -->
+    <!-- Project grid — uniform 3-column image cards (Figma 15506:343) -->
     <section class="work__grid container" data-theme-section="light">
       <div class="work__grid-list">
         <component :is="cardIs(p)" :to="cardTo(p)" v-for="p in grid" :key="p.slug" class="work__card">
@@ -151,8 +153,11 @@ const cardMedia = (p) =>
           <div class="work__card-info">
             <div class="work__card-head">
               <h2 class="work__card-title">{{ p.title }}</h2>
-              <span v-if="p.awards" class="work__badge work__badge--award">{{ awardLabel(p.awards) }}</span>
-              <span v-else-if="p.comingSoon" class="work__badge work__badge--soon">Coming soon</span>
+              <!-- Award and "coming soon" can co-occur (e.g. Rocco). -->
+              <div v-if="p.awards || p.comingSoon" class="work__badges">
+                <span v-if="p.awards" class="work__badge work__badge--award">{{ awardLabel(p.awards) }}</span>
+                <span v-if="p.comingSoon" class="work__badge work__badge--soon">Coming soon</span>
+              </div>
             </div>
             <p class="work__card-desc">{{ p.desc }}</p>
           </div>
@@ -210,11 +215,12 @@ a.work__card:hover .work__card-title { color: var(--color-blue); } /* linked car
   background: var(--color-lavender);
 }
 .work__card-info { display: flex; flex-direction: column; gap: 0.875em; } /* 14 */
-.work__card-head { display: flex; align-items: flex-start; gap: 0.6875em; } /* 11 */
+.work__card-head { display: flex; align-items: flex-start; gap: 1.5em; } /* 24 */
 .work__card-title { flex: 1 0 0; min-width: 0; font-size: 1.5em; line-height: 1.1; transition: color 0.3s ease; } /* 24 */
-.work__card-desc { font-size: 1em; line-height: 1.1; opacity: 0.4; } /* 16 */
+.work__card-desc { font-size: 1em; line-height: 1.2; opacity: 0.4; } /* 16 */
 
-/* Badges */
+/* Badges — award + coming-soon sit together (8px apart) in .work__badges. */
+.work__badges { display: flex; align-items: flex-start; gap: 0.5em; flex-shrink: 0; } /* 8 */
 .work__badge {
   flex-shrink: 0;
   font-size: 0.6875em;              /* 11 */
@@ -226,7 +232,6 @@ a.work__card:hover .work__card-title { color: var(--color-blue); } /* linked car
 .work__badge--award {
   background: var(--color-blue);
   color: var(--color-off-white);
-  text-transform: uppercase;
 }
 .work__badge--soon {
   background: var(--color-off-white);
@@ -253,9 +258,9 @@ a.work__card:hover .work__card-title { color: var(--color-blue); } /* linked car
 .work__quote-mark { width: 1.8125em; height: auto; color: var(--color-ink); } /* 29 × 25 */
 .work__quote-text { font-size: 2.5em; line-height: 1.1; } /* 40 */
 
-/* Grid */
+/* Grid — 3 uniform columns of image cards (Figma 15506:343). */
 .work__grid { padding-block: 5em; }
-.work__grid-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5em; }
+.work__grid-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5em; }
 
 /* Archive */
 .work__archive { padding-block: 5em; display: flex; flex-direction: column; gap: 0.625em; } /* 10 between year groups */

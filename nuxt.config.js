@@ -38,7 +38,13 @@ export default defineNuxtConfig({
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
       meta: [{ name: 'theme-color', content: '#e8e4db' }],
-      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      // Filenames are case-sensitive on the deploy host (Linux) — match exactly.
+      // Web-clip must be PNG (iOS ignores SVG apple-touch-icons); generated from
+      // Webclip.svg. Legacy /favicon.svg kept as the guessed-path fallback.
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/img/Favicon.svg' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+      ],
     },
   },
 })
