@@ -281,6 +281,11 @@ function onLeave(el, done) {
 .menu__social a:hover { color: var(--color-blue); }
 .menu__social-icon { width: 0.6em; height: 0.6em; } /* ~9.6px */
 
+/* === TABLET + MOBILE (≤991px) — larger nav links ================== */
+@media (max-width: 991px) {
+  .menu__link { font-size: 2em; }  /* 32px */
+}
+
 /* === MOBILE (≤479px) — full-screen panel (Figma node 15324-6975) =====
    The narrow right drawer gives way to an edge-to-edge sheet; everything else
    (type sizes, header → body gap, footer layout) carries over via em. */

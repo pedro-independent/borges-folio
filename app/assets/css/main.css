@@ -642,12 +642,10 @@ main { display: block; }
    push (.home__stage ends with the industries runway) lands at the EXACT
    scroll where the industries block releases. Both then ride up together in
    flow-lockstep: no overlap, no cover, reads as normal scrolling. Scoped to
-   the wrapper: without it (or below 768px, where industries never latches)
-   the portfolio scrolls normally. `top` stays auto until the JS sets it, so
-   this rule alone changes nothing. */
-@media (min-width: 768px) {
-  .home__stage .portfolio { position: sticky; }
-}
+   the wrapper: without it the portfolio scrolls normally. All widths — the
+   industries latch (and so the park) runs on every tier. `top` stays auto
+   until the JS sets it, so this rule alone changes nothing. */
+.home__stage .portfolio { position: sticky; }
 .portfolio__title {
   text-align: center;
   white-space: nowrap;
@@ -758,16 +756,15 @@ main { display: block; }
    in JS (HpIndustries.vue) to `sticky height + scroll distance`; the gutter +
    max-width come from `.container` on the sticky child. */
 .industries { position: relative; }
-.industries__sticky { position: relative; }
-@media (min-width: 768px) {
-  /* Latch with the section's top edge (border row + first items — the focal
-     point per the Figma annotation) at ~42% of the viewport; the rest of the
-     ~50em list window runs below the fold and items rise up through it. A
-     fixed vh (not a centering calc) so short/wide viewports can never push the
-     latch above the fold. HpIndustries.vue reads this RESOLVED value
-     (getComputedStyle .top) for the scrub start, so CSS is the single source. */
-  .industries__sticky { position: sticky; top: 42vh; }
-}
+/* Latch with the section's top edge (border row + first items — the focal
+   point per the Figma annotation) at ~42% of the viewport; the rest of the
+   ~50em list window runs below the fold and items rise up through it. A
+   fixed vh (not a centering calc) so short/wide viewports can never push the
+   latch above the fold. HpIndustries.vue reads this RESOLVED value
+   (getComputedStyle .top) for the scrub start, so CSS is the single source.
+   All widths — the reveal runs on mobile too; under reduced motion the JS
+   never sizes the runway, so the sticky simply has no travel and stays inert. */
+.industries__sticky { position: sticky; top: 42vh; }
 .industries__row {
   position: relative;
   display: flex;
@@ -813,9 +810,9 @@ main { display: block; }
    contact up INTO the spent window region: sized so the heading enters the
    fold trailing the rising list and never touches it (both move 1:1 with
    scroll during the scrub), coming to rest below the parked last item.
-   Elsewhere (mobile, reduced motion) the list never empties, so the contact
-   stays in normal flow. */
-@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+   Under reduced motion the list never empties, so the contact stays in
+   normal flow. (All widths — the reveal runs on mobile too.) */
+@media (prefers-reduced-motion: no-preference) {
   .contact { margin-top: -44.5em; }
 }
 .contact__inner {
@@ -887,6 +884,12 @@ main { display: block; }
   .project__media { order: -1; width: 28em; max-width: 100%; height: 21.125em; } /* 448 × 338 */
   .project__meta { width: 28em; max-width: 100%; }
 
+  /* The annotation pin box is pure desktop plumbing (the marks themselves are
+     hidden with .anno below 992) — remove it AND the negative margin that
+     cancels its flow height, or the margin alone would open a 24.5em hole. */
+  .portfolio__anno-pin { display: none; }
+  .portfolio__anno-pin + .project { margin-top: 0; }
+
   /* Industries — captions in a row on top, list full-width below */
   .industries__row { flex-wrap: wrap; gap: 4em 0; padding: 1em 0; }
   .industries__aside { width: 49%; }
@@ -905,6 +908,12 @@ main { display: block; }
 /* === MOBILE (≤479px, Figma 390 frame) =====================
    Builds on the tablet reflow above; overrides only what differs. */
 @media (max-width: 479px) {
+  /* Cards flow normally — no stack. The stacking animation is a
+     desktop/tablet flourish; on phones each row scrolls past as content. */
+  .project { position: static; top: auto; }
+  /* No pile to hold after the last card — drop the containment tail. */
+  .portfolio__rows::after { display: none; }
+
   .container { padding: 0 1em; }            /* 16px gutters */
 
   .t-display-xl { font-size: 6em; }         /* "My portfolio" ~96px (wraps to 2 lines) */
@@ -933,7 +942,6 @@ main { display: block; }
 
   /* Portfolio — full-width cards; centered title that wraps */
   .portfolio__title { text-align: center; white-space: normal; }
-  .project { top: calc(50vh - 11.5em); } /* re-center: media 16.875em + meta ≈ 23em */
   .project__media { width: 100%; height: 16.875em; }   /* 358 × 270 */
   .project__meta { width: 100%; }
 

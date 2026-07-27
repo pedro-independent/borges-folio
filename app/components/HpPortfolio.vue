@@ -78,8 +78,10 @@ onMounted(() => {
   //    block releases — both ride up in flow-lockstep afterwards, portfolio
   //    bottom kissing the industries top, reading as normal scrolling
   //    instead of one section sliding over the other.
-  // Mirrors the ≥768px tier of the industries latch.
-  mm.add('(min-width: 768px)', () => {
+  // All widths — mirrors the industries latch, which runs on every tier. The
+  // reveal scrub only runs without reduced motion, but parking is inert when
+  // the runway never grows, so the broader gate is safe.
+  mm.add('all', () => {
     const el = section.value
     const basePad = parseFloat(getComputedStyle(el).paddingBottom) || 0
     const industries = document.querySelector('.industries')
@@ -105,10 +107,13 @@ onMounted(() => {
     }
   })
 
-  // `all` always matches — one context for every width; `reduce` only gates the
-  // scale (real motion). The opacity crossfade is the reduced-motion-safe cue
-  // and keeps stacked metas from overlapping, so it runs regardless.
-  mm.add({ all: 'all', reduce: '(prefers-reduced-motion: reduce)' }, (ctx) => {
+  // ≥480 only — on the mobile tier the rows aren't sticky (see main.css), so
+  // there's no stack to embellish and the cards scroll as plain content.
+  // Reduced motion only gates the scale (real motion): the opacity crossfade is
+  // the reduced-motion-safe cue that keeps stacked metas from overlapping, so
+  // it runs whenever the stack itself does.
+  mm.add('(min-width: 480px)', () => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const rows = gsap.utils.toArray('.project', section.value)
     const last = rows[rows.length - 1]
     const triggers = []
@@ -136,7 +141,7 @@ onMounted(() => {
     // pile reads at: ~10% between neighbours, small enough to stay a depth cue
     // rather than a shrink.
     const STEP = 0.1
-    if (!ctx.conditions.reduce) {
+    if (!reduce) {
       rows.slice(0, -1).forEach((row, i) => {
         const covers = rows.length - 1 - i
         const tween = gsap.fromTo(

@@ -305,6 +305,7 @@ a.work__archive-row:hover .work__archive-name { color: var(--color-blue); } /* l
   .work__archive-row:first-child { border-top: 1px solid var(--color-ink); } /* line under the year */
 }
 
+
 /* === MOBILE (≤479px; Figma node 15324-6670) ====================== */
 @media (max-width: 479px) {
   /* Featured stacks: hero, then the pair, all full-width (extra top room

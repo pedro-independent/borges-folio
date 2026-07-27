@@ -255,7 +255,7 @@ const ptComponents = {
 /* --- Rich text content (rendered by PortableText) --- */
 .case__col :deep(.case__h) { font-size: 1.5em; line-height: 1.2; }               /* 24 — headings/statements */
 .case__col :deep(.case__sub) { font-size: 0.6875em; line-height: 1.1; }          /* 11 — small field label */
-.case__col :deep(.case__p) { font-size: 1em; line-height: 1.35; opacity: 0.4; }  /* 16 — body copy */
+.case__col :deep(.case__p) { font-size: 1em; line-height: 1.4; opacity: 0.6; }  /* 16 — body copy */
 /* A small label binds tightly to what it introduces (8px, not the 32px flow gap). */
 .case__col :deep(.case__sub + .case__p) { margin-top: -1.5em; }
 .case__col :deep(ul),
@@ -266,8 +266,8 @@ const ptComponents = {
   flex-direction: column;
   gap: 0.5em;
   font-size: 1em;
-  line-height: 1.35;
-  opacity: 0.4;
+  line-height: 1.4;
+  opacity: 0.6;
 }
 .case__col :deep(a) { text-decoration: underline; text-underline-offset: 0.2em; }
 .case__col :deep(a:hover) { color: var(--color-blue); }

@@ -81,7 +81,7 @@ const bioBody = computed(
     cms.value.bioBody ||
     'At duall studio I play a central role within the design team, acting as lead designer to shape creative directions and ensure clarity and consistency across projects. I have experience in strategic decision-making, end-to-end project management, and direct communication with national and international clients. I am also responsible for presenting proposals, aligning strategy, and guiding projects from initial concept through to production.',
 )
-const portrait = computed(() => cms.value.portrait || '/img/about-portrait.png')
+const portrait = computed(() => cms.value.portrait || '/img/about_img.jpg')
 const portraitCaption = computed(() => cms.value.portraitCaption || 'If awards are your thing check them out bellow')
 const awardsImage = computed(() => cms.value.awardsImage || '/img/about-awards.jpg')
 const quoteText = computed(
@@ -282,8 +282,11 @@ useSeo({
 .about__cv-row { display: flex; align-items: center; gap: 0.25em; }
 .about__cv-role { flex: 1 0 0; min-width: 0; line-height: 1.2; }
 .about__cv-meta {
+  /* Design (15324-4548): the meta is ALWAYS one line — a long ROLE wraps
+     instead (meta stays vertically centred via the row's align-items). A fixed
+     170px box wrapped the longer Awards metas mid-date at every breakpoint. */
   flex-shrink: 0;
-  width: 10.625em;                  /* 170 */
+  white-space: nowrap;
   text-align: right;
   font-size: 0.6875em;             /* 11 */
   opacity: 0.6;
@@ -301,10 +304,13 @@ useSeo({
 @media (max-width: 479px) {
   .about__intro { padding-top: 8em; padding-bottom: 5em; }
   .about__lede { font-size: 2.5em; }       /* 40px */
+  .about__quote-text { font-size: 1.5em; } /* 24px — matches the work page */
 
   .about__lead { flex-direction: column; gap: 2.5em; padding: 5em 1em; }
   .about__aside { width: 100%; }
-  .about__photo--portrait { height: 20em; }
+  /* Full-width at the photo's own portrait ratio (342×478 design asset) —
+     a fixed landscape-shaped box cover-cropped it into a weird sliver. */
+  .about__photo--portrait { height: auto; aspect-ratio: 342 / 478; }
   .about__bio { width: 100%; gap: 2.5em; }
 
   .about__quote { padding: 3em 1em; }

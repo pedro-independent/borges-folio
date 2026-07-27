@@ -41,7 +41,9 @@ let mm = null
 onMounted(() => {
   const { gsap, ScrollTrigger } = useGSAP()
   mm = gsap.matchMedia()
-  mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
+  // All widths — the reveal runs on mobile too; the CSS latch (.industries__sticky)
+  // is likewise unconditional, so the two stay in lockstep at every tier.
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
     const list = track.value.parentElement
 
     // Translate until the LAST item's top reaches the TOP of the list window:
