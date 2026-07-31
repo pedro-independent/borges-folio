@@ -406,6 +406,44 @@ main { display: block; }
   .footer__bottom { --wm-fill: 1; --ar-fill: 1; }
 }
 
+/* === CLICK TO ZOOM (Osmo "Click to Zoom (Basic)") =========
+   Overlay lives in layouts/default.vue, behaviour in
+   plugins/click-zoom.client.js. Triggers are opt-in: only elements tagged
+   [data-click-zoom] zoom (currently the case-study rich-text images).
+   The lightbox padding caps how large the zoom can grow; its background
+   is the backdrop colour the plugin animates to. */
+
+/* Desktop only — the plugin doesn't initialise below 992px (the images are
+   already full-width there), so the affordance must not advertise itself. */
+@media (min-width: 992px) {
+  img[data-click-zoom],
+  [data-click-zoom] img,
+  [data-click-zoom-article] img {
+    cursor: zoom-in;
+  }
+}
+
+[data-click-zoom-lightbox] > img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+  border-radius: 0.25em;  /* matches .case__media-* so the FLIP corners don't jump */
+}
+
+.click-zoom__lightbox {
+  z-index: 100;                 /* above the fixed nav (z-index 10) */
+  cursor: zoom-out;
+  background-color: #000000e6;
+  justify-content: center;
+  align-items: center;
+  padding: 3em;
+  display: none;
+  position: fixed;
+  inset: 0%;
+}
+
 /* === PAGE: HERO ===========================================
    Coordinates are read off the 1440 Figma frame (px ÷ 16 = em) and
    anchored to the hero's top-left, so the headline, paragraph and the

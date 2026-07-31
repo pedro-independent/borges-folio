@@ -14,5 +14,9 @@ const showFooter = computed(() => route.path !== '/contact')
     <AppNav />
     <main><slot /></main>
     <AppFooter v-if="showFooter" :key="$route.path" />
+
+    <!-- Click-to-zoom overlay (plugins/click-zoom.client.js). Empty until an
+         image is clicked; the plugin drops the zoomed clone in here. -->
+    <div data-click-zoom-lightbox class="click-zoom__lightbox"></div>
   </div>
 </template>

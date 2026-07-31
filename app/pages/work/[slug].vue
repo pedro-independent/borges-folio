@@ -73,11 +73,19 @@ const coverStyle = computed(() => {
 // --- Portable Text renderer --------------------------------------------------
 // A real uploaded image renders as an <img>; the local fallback's tint
 // placeholder renders as a flat box with the same footprint.
+// `data-click-zoom` opts each uploaded image into the click-to-zoom lightbox
+// (plugins/click-zoom.client.js) — rich-text media only, so the hero, cover and
+// the small stat avatars stay untouched. Tint placeholders have nothing to zoom.
 const mediaNode = (value, half) => {
   const cls = half ? 'case__media-sq' : 'case__media-wide'
   if (value.url) {
     // Sanity image CDN params keep payloads sane without touching the asset.
-    return h('img', { class: cls, src: `${value.url}?w=${half ? 900 : 1600}&fit=max&auto=format`, alt: value.alt || '' })
+    return h('img', {
+      class: cls,
+      'data-click-zoom': '',
+      src: `${value.url}?w=${half ? 900 : 1600}&fit=max&auto=format`,
+      alt: value.alt || '',
+    })
   }
   return h('div', { class: cls, style: { background: value.tint || 'var(--color-lavender)' }, 'aria-hidden': 'true' })
 }
