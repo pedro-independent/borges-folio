@@ -51,16 +51,54 @@ const form = reactive({
   email: '',
   topic: 'full-time',
   detail: '',
+  company: '', // honeypot — hidden from humans, see the template
 })
 
-// No backend in this build — compose a pre-filled mailto so the form is
-// functional out of the box. Swap for a real endpoint (Formspree / serverless /
-// Sanity) by replacing this handler. Native `required` guards name + email.
-function onSubmit() {
-  const topic = topics.value.find((t) => t.value === form.topic)?.label ?? ''
-  const subject = `New enquiry — ${topic}`
-  const body = `Name: ${form.name}\nEmail: ${form.email}\n\n${form.detail}`
-  window.location.href = `mailto:${email.value}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+// Submission state drives the status line under the button. 'sending' also
+// disables the button so a double-click can't send twice.
+const status = ref('idle') // 'idle' | 'sending' | 'sent' | 'error'
+const statusMessage = ref('')
+
+// POST to the Nitro route, which sends the mail through Resend (the API key
+// stays server-side). The endpoint validates too — this pass is just so an
+// obvious miss is caught without a round trip. The form is `novalidate`, so
+// nothing else is checking.
+async function onSubmit() {
+  if (status.value === 'sending') return
+
+  if (!form.name.trim() || !form.email.trim()) {
+    status.value = 'error'
+    statusMessage.value = 'Please add your name and email.'
+    return
+  }
+
+  status.value = 'sending'
+  statusMessage.value = ''
+  try {
+    await $fetch('/api/contact', {
+      method: 'POST',
+      body: {
+        name: form.name,
+        email: form.email,
+        // Send the human label — it's what reads well in the email subject.
+        topic: topics.value.find((t) => t.value === form.topic)?.label ?? '',
+        detail: form.detail,
+        company: form.company,
+      },
+    })
+    status.value = 'sent'
+    statusMessage.value = 'Thanks — your message is on its way. I’ll get back to you soon.'
+    form.name = ''
+    form.email = ''
+    form.detail = ''
+    form.topic = 'full-time'
+  } catch (err) {
+    status.value = 'error'
+    // The route puts a visitor-safe sentence in `data.message`; anything else
+    // (offline, proxy error) gets the generic line with the mailto below it.
+    statusMessage.value =
+      err?.data?.data?.message || 'Something went wrong sending your message. Please use the email address below.'
+  }
 }
 
 useSeo({
@@ -221,15 +259,32 @@ onBeforeUnmount(() => clearInterval(clock))
               />
             </div>
 
+            <!-- Honeypot: off-screen and skipped by keyboard/AT, so only a bot
+                 fills it. The server silently drops any submission that does. -->
+            <div class="contact-page__hp" aria-hidden="true">
+              <label for="contact-company">Company</label>
+              <input
+                id="contact-company"
+                v-model="form.company"
+                type="text"
+                name="company"
+                tabindex="-1"
+                autocomplete="off"
+              />
+            </div>
+
             <div class="field contact-page__submit">
               <!-- Same hover animations as the site buttons: the Button 004
                    per-character flip + the Button 029 blue colour wipe. The
-                   buttons plugin splits [data-button-004] labels on page:finish. -->
+                   buttons plugin splits [data-button-004] labels on page:finish,
+                   so the label text must stay static — progress is shown in the
+                   status line below, not by swapping the label. -->
               <button
                 type="submit"
                 class="contact-page__send button-004 button-029"
                 data-button-004
                 data-button-029
+                :disabled="status === 'sending'"
               >
                 <span class="button-029__hover" aria-hidden="true">
                   <span class="button-029__hover-bg"></span>
@@ -239,7 +294,16 @@ onBeforeUnmount(() => clearInterval(clock))
                   <span aria-hidden="true" data-button-004-text class="button-004__text is--hover">Send message</span>
                 </span>
               </button>
-              <p class="contact-page__required">*Required fields</p>
+              <p
+                v-if="statusMessage"
+                class="contact-page__required contact-page__status"
+                :class="{ 'is-error': status === 'error' }"
+                role="status"
+                aria-live="polite"
+              >
+                {{ statusMessage }}
+              </p>
+              <p v-else class="contact-page__required">*Required fields</p>
             </div>
           </form>
 
@@ -416,8 +480,24 @@ onBeforeUnmount(() => clearInterval(clock))
   border-radius: 0.25em;
 }
 /* Hover/focus = the Button 004 flip + Button 029 blue wipe; no opacity dim — the
-   fill is the affordance (see button-004.css / button-029.css). */
+   fill is the affordance (see button-004.css / button-029.css). The in-flight
+   state is the one exception: dim it so the disabled button reads as busy. */
+.contact-page__send:disabled { opacity: 0.5; }
 .contact-page__required { font-size: 0.6875em; line-height: 1.2; text-align: center; } /* 11 */
+/* Submission feedback replaces the required-fields note in the same slot, so the
+   button never shifts. Errors take the accent blue (the palette has no red). */
+.contact-page__status { opacity: 0.6; }
+.contact-page__status.is-error { color: var(--color-blue); opacity: 1; }
+
+/* Honeypot — removed from view and from the a11y tree without display:none,
+   which some bots treat as a signal to skip the field. */
+.contact-page__hp {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
 
 /* Email fallback — right-aligned */
 .contact-page__email {

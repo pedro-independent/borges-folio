@@ -15,6 +15,21 @@ export default defineNuxtConfig({
 
   // Sanity creds exposed to the client read-only via runtimeConfig.public.
   runtimeConfig: {
+    // --- PRIVATE (server-only; never shipped to the browser) ---
+    // Contact form → Resend (server/api/contact.post.js). Every value below is a
+    // LITERAL default that Nuxt auto-overrides from the matching env var —
+    // NUXT_RESEND_API_KEY / NUXT_CONTACT_TO / NUXT_CONTACT_FROM. Do NOT write
+    // `process.env.NUXT_*` here: a key that reads its own auto-override env var
+    // collides with it and resolves to undefined at runtime (same trap as
+    // siteUrl above). The key must be set on the host or the route returns 503.
+    resendApiKey: '',
+    contactTo: 'pedrosmborges@gmail.com',
+    // Resend only accepts a `from` on a domain you've verified. The default is
+    // Resend's shared sandbox sender, which can ONLY deliver to the address that
+    // owns the Resend account — fine for testing, replace via NUXT_CONTACT_FROM
+    // once the site's domain is verified (e.g. 'Portfolio <hello@yourdomain.com>').
+    contactFrom: 'Portfolio <onboarding@resend.dev>',
+
     public: {
       // Production base URL — single source of truth for canonical tags, og:url,
       // robots.txt and sitemap.xml. SET THIS before launch via the host env var
