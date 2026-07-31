@@ -36,7 +36,6 @@ export const HOME_PAGE = groq`*[_type == "homePage"][0]{
 export const ABOUT_PAGE = groq`*[_type == "aboutPage"][0]{
   introLede, bioTitle, bioLead, bioBody,
   "portrait": portrait.asset->url, portraitCaption,
-  "awardsImage": awardsImage.asset->url,
   quoteText, quoteAttribution,
   cvGroups[]{ title, entries[]{ label, meta } },
   seo{ ${SEO} }

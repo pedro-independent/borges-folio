@@ -1,6 +1,7 @@
 <script setup>
 // About reads the aboutPage singleton; each field falls back to its Figma copy.
 // Lazy on the client so the fetch never suspends the page transition.
+import { computed, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
 import { ABOUT_PAGE } from '~/utils/sanityQueries'
 
 const { data } = await useSanityQuery('aboutPage', ABOUT_PAGE, {}, { lazy: import.meta.client })
@@ -52,13 +53,24 @@ const FALLBACK_CV = [
       ['Special Kudos | The Land Group', 'CSS Design Awards [23 Apr 2024]'],
       ['Special Kudos | Software Angels', 'CSS Design Awards [18 Apr 2023]'],
       ['Special Kudos | Rocco', 'CSS Design Awards [3 Sep 2022]'],
-      ['Honorable Mentions | Specialist Ceramics', 'awwwards [8 Mar 2022]'],
       ['Special Kudos | PG Arquitetos', 'CSS Design Awards [11 Apr 2022]'],
+      ['Honorable Mentions | PG Arquitetos', 'awwwards [08 Mar 2022]'],
       ['Website of the day | Specialist Ceramics', 'CSS Design Awards [18 Nov 2021]'],
-      ['Honorable Mentions | PG Arquitetos', 'awwwards [29 Oct 2021]'],
-      ['Site of the day | Amouse Bouche', 'awwwards [15 Aug 2021]'],
-      ['Website of the day | Amouse Bouche', 'CSS Design Awards [13 Jul 2021]'],
+      ['UI Design Award | Specialist Ceramics', 'CSS Design Awards [18 Nov 2021]'],
+      ['UX Design Award | Specialist Ceramics', 'CSS Design Awards [18 Nov 2021]'],
+      ['Innovation Design Award | Specialist Ceramics', 'CSS Design Awards [18 Nov 2021]'],
+      ['Honorable Mentions | Specialist Ceramics', 'awwwards [29 Oct 2021]'],
+      ['Mobile Excellence | Specialist Ceramics', 'awwwards [29 Oct 2021]'],
+      ['FWA of the Day | Amuse Bouche', 'FWA [22 Aug 2021]'],
+      ['Site of the day | Amuse Bouche', 'awwwards [15 Aug 2021]'],
+      ['Developer Award | Amuse Bouche', 'awwwards [15 Aug 2021]'],
+      ['Website of the day | Amuse Bouche', 'CSS Design Awards [13 Jul 2021]'],
+      ['UI Design Award | Amuse Bouche', 'CSS Design Awards [13 Jul 2021]'],
+      ['UX Design Award | Amuse Bouche', 'CSS Design Awards [13 Jul 2021]'],
+      ['Innovation Design Award | Amuse Bouche', 'CSS Design Awards [13 Jul 2021]'],
+      ['Mobile Excellence | Amuse Bouche', 'awwwards [12 Jul 2021]'],
       ['Honorable Mentions | Design for investment', 'awwwards [14 Jan 2021]'],
+      ['Mobile Excellence | Design for investment', 'awwwards [14 Jan 2021]'],
     ],
   },
 ]
@@ -83,7 +95,6 @@ const bioBody = computed(
 )
 const portrait = computed(() => cms.value.portrait || '/img/about_img.jpg')
 const portraitCaption = computed(() => cms.value.portraitCaption || 'If awards are your thing check them out bellow')
-const awardsImage = computed(() => cms.value.awardsImage || '/img/about-awards.jpg')
 const quoteText = computed(
   () =>
     cms.value.quoteText ||
@@ -97,6 +108,151 @@ const cv = computed(() => {
   }
   return FALLBACK_CV
 })
+
+// === Awards hover preview ===================================
+// Certificate image per award, keyed on the normalised row label so
+// CMS-entered rows keep matching as long as the label text does. Both CCP
+// 2021 mentions share the one 2021 certificate; "excelence" covers the
+// current CMS spelling.
+const AWARD_IMAGES = {
+  'top 2 ux designer': '/img/CCP_2023.jpg',
+  'top 7 ux designer': '/img/CCP_2021.jpg',
+  'top 9 ui designer': '/img/CCP_2021.jpg',
+  'special kudos | clickguard': '/img/CSS_Kudos_ClickGuard.jpg',
+  'special kudos | the land group': '/img/CSS_Kudos_TLG.jpg',
+  'special kudos | software angels': '/img/CSS_Kudos_Software.jpg',
+  'special kudos | rocco': '/img/CSS_Kudos_Rocco.jpg',
+  'special kudos | pg arquitetos': '/img/CSS_Kudos_PG.jpg',
+  'honorable mentions | pg arquitetos': '/img/Awwwards_honors_PG.jpg',
+  'website of the day | specialist ceramics': '/img/CSS_WSOTD_Specialist.jpg',
+  'ui design award | specialist ceramics': '/img/CSS_UI_Specialist.jpg',
+  'ux design award | specialist ceramics': '/img/CSS_UX_Specialist.jpg',
+  'innovation design award | specialist ceramics': '/img/CSS_Inovation_Specialist.jpg',
+  'honorable mentions | specialist ceramics': '/img/Awwwards_honors_Specialist.jpg',
+  'mobile excellence | specialist ceramics': '/img/Awwwards_Mobile_Specialist.jpg',
+  'mobile excelence | specialist ceramics': '/img/Awwwards_Mobile_Specialist.jpg',
+  'fwa of the day | amuse bouche': '/img/FWA_FWAOTD_Amuse.jpg',
+  'site of the day | amuse bouche': '/img/Awwwards_SOD_Amuse.jpg',
+  'developer award | amuse bouche': '/img/Awwwards_DEV_Amuse.jpg',
+  'website of the day | amuse bouche': '/img/CSS_WSOTD_Amuse.jpg',
+  'ui design award | amuse bouche': '/img/CSS_UI_Amuse.jpg',
+  'ux design award | amuse bouche': '/img/CSS_UX_Amuse.jpg',
+  'innovation design award | amuse bouche': '/img/CSS_Inovation_Amuse.jpg',
+  'mobile excellence | amuse bouche': '/img/Awwwards_Mobile_Amuse.jpg',
+  'honorable mentions | design for investment': '/img/Awwwards_honors_D4I.jpg',
+  'mobile excellence | design for investment': '/img/Awwwards_Mobile_D4I.jpg',
+}
+const AWARD_PREVIEW_SRCS = [...new Set(Object.values(AWARD_IMAGES))]
+
+const awardKey = (label) => (label || '').toLowerCase().replace(/\s+/g, ' ').trim()
+const isAwardsGroup = (group) => /award/i.test(group.title || '')
+// Awards rows carry their certificate src in the DOM so the delegated pointer
+// handlers below survive the fallback→CMS re-render.
+const awardAttrs = (group, row, i) => {
+  const img = isAwardsGroup(group) ? AWARD_IMAGES[awardKey(row[0])] : null
+  return img ? { 'data-award-img': img, 'data-award-row': i } : null
+}
+
+const cvSection = useTemplateRef('cvSection')
+const previewEl = useTemplateRef('previewEl')
+let mm = null
+
+onMounted(() => {
+  const { gsap } = useGSAP()
+  mm = gsap.matchMedia()
+
+  // Desktop pointer devices only — tablet/mobile drop the image entirely
+  // (as the old static one did) and reduced-motion never shows it.
+  mm.add('(min-width: 992px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)', () => {
+    const section = cvSection.value
+    const preview = previewEl.value
+    if (!section || !preview) return
+
+    const imgBySrc = new Map(
+      Array.from(preview.querySelectorAll('img')).map((el) => [el.getAttribute('src'), el]),
+    )
+
+    gsap.set(preview, { yPercent: -50 }) // centre the box on the tracked y
+    const yTo = gsap.quickTo(preview, 'y', { duration: 0.5, ease: 'power3' })
+
+    let current = null // <img> on top of the stack
+    let rowIndex = -1 // hovered award row — direction memory
+    let visible = false
+    let zTop = 1
+
+    const moveTo = (e, immediate) => {
+      const bounds = section.getBoundingClientRect()
+      const half = preview.offsetHeight / 2
+      const y = gsap.utils.clamp(half, bounds.height - half, e.clientY - bounds.top)
+      if (immediate) yTo(y, y)
+      else yTo(y)
+    }
+
+    const setImage = (img, dir) => {
+      if (img === current) return
+      const prev = current
+      current = img
+      gsap.killTweensOf(img)
+      gsap.set(img, { autoAlpha: 1, zIndex: ++zTop })
+      if (!prev || !dir) {
+        gsap.set(img, { yPercent: 0 })
+        if (prev) gsap.set(prev, { autoAlpha: 0 })
+        return
+      }
+      // Moving down the list the new certificate rises from below (and vice
+      // versa) while the old one is nudged the opposite way underneath it.
+      gsap.killTweensOf(prev)
+      gsap.fromTo(img, { yPercent: dir * 100 }, { yPercent: 0, duration: 0.6, ease: 'osmo' })
+      gsap.to(prev, {
+        yPercent: dir * -35,
+        duration: 0.6,
+        ease: 'osmo',
+        onComplete: () => {
+          if (current !== prev) gsap.set(prev, { autoAlpha: 0, yPercent: 0 })
+        },
+      })
+    }
+
+    const onOver = (e) => {
+      const row = e.target.closest('[data-award-img]')
+      if (!row || !section.contains(row)) return
+      const img = imgBySrc.get(row.dataset.awardImg)
+      if (!img) return
+      const idx = Number(row.dataset.awardRow)
+      const dir = visible ? Math.sign(idx - rowIndex) : 0
+      rowIndex = idx
+      setImage(img, dir)
+      if (!visible) {
+        visible = true
+        moveTo(e, true)
+        gsap.to(preview, { autoAlpha: 1, duration: 0.35, ease: 'power2.out', overwrite: 'auto' })
+      }
+    }
+
+    const onOut = (e) => {
+      const list = e.target.closest('[data-award-list]')
+      if (!list || (e.relatedTarget && list.contains(e.relatedTarget))) return
+      visible = false
+      rowIndex = -1
+      gsap.to(preview, { autoAlpha: 0, duration: 0.3, ease: 'power2.out', overwrite: 'auto' })
+    }
+
+    const onMove = (e) => {
+      if (visible) moveTo(e)
+    }
+
+    // Delegated on the section so rows survive the fallback→CMS re-render.
+    section.addEventListener('pointerover', onOver)
+    section.addEventListener('pointerout', onOut)
+    section.addEventListener('pointermove', onMove)
+    return () => {
+      section.removeEventListener('pointerover', onOver)
+      section.removeEventListener('pointerout', onOut)
+      section.removeEventListener('pointermove', onMove)
+    }
+  })
+})
+onBeforeUnmount(() => mm?.revert())
 
 useSeo({
   title: () => cms.value.seo?.metaTitle || 'About',
@@ -149,21 +305,23 @@ useSeo({
     </section>
 
     <!-- CV -->
-    <section class="about__cv container" data-theme-section="light">
-      <div class="about__cv-media">
-        <img :src="awardsImage" alt="" />
-      </div>
-
+    <section ref="cvSection" class="about__cv container" data-theme-section="light">
       <div class="about__cv-col">
         <div v-for="group in cv" :key="group.title" class="about__cv-group">
           <h3 class="about__cv-heading">{{ group.title }}</h3>
-          <ul class="about__cv-list">
-            <li v-for="(row, i) in group.rows" :key="i" class="about__cv-row">
+          <ul class="about__cv-list" :data-award-list="isAwardsGroup(group) ? '' : undefined">
+            <li v-for="(row, i) in group.rows" :key="i" class="about__cv-row" v-bind="awardAttrs(group, row, i)">
               <span class="about__cv-role">{{ row[0] }}</span>
               <span class="about__cv-meta">{{ row[1] }}</span>
             </li>
           </ul>
         </div>
+      </div>
+
+      <!-- Cursor-tracked certificate preview; all certificates stay stacked
+           so switching never waits on a network fetch. -->
+      <div ref="previewEl" class="about__cv-preview" aria-hidden="true">
+        <img v-for="src in AWARD_PREVIEW_SRCS" :key="src" :src="src" alt="" />
       </div>
     </section>
   </div>
@@ -246,23 +404,38 @@ useSeo({
 .about__quote-mark { width: 1.8125em; height: auto; color: var(--color-ink); }
 .about__quote-text { font-size: 2.5em; line-height: 1.2; } /* 40 */
 
-/* CV — right-aligned column with a decorative image to its left */
+/* CV — right-aligned column with the awards preview floating to its left */
 .about__cv {
+  position: relative;               /* positioning context for the preview */
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
   gap: 0.25em;
   padding: 5em 1.5em 7.5em;         /* 80 / 24 / 120 */
 }
-.about__cv-media {
-  flex-shrink: 0;
+/* Certificate preview — same box the old static image occupied (170 × 234),
+   but cursor-tracked: GSAP drives `y` while hovering an Awards row; hidden
+   until then and never shown on touch / reduced-motion / ≤991px. */
+.about__cv-preview {
+  position: absolute;
+  top: 0;
+  right: 34.1875em;                 /* 24 pad + 519 column + 4 gap */
   width: 10.625em;                  /* 170 */
   height: 14.625em;                 /* 234 */
   border-radius: 0.25em;
   overflow: hidden;
-  margin-bottom: 7.5em;             /* lift it up beside the Awards block */
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;               /* revealed via GSAP autoAlpha */
+  z-index: 2;
 }
-.about__cv-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.about__cv-preview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .about__cv-col {
   flex-shrink: 0;
   width: 32.4375em;                 /* 519 */
@@ -295,7 +468,7 @@ useSeo({
 /* === TABLET (≤991px) — stack the CV image out, keep two columns ===== */
 @media (max-width: 991px) {
   .about__lede { font-size: 3.75em; }      /* 60px */
-  .about__cv-media { display: none; }
+  .about__cv-preview { display: none; }
   .about__bio { width: 32.5em; }
   .about__quote-mark { width: 1.5em; }     /* 24 — matches the work page */
 }

@@ -6,6 +6,8 @@
 // Because we provide a custom structure, the default auto-generated document
 // lists are replaced, so singletons appear only here (and the config strips
 // their create/delete actions).
+import { CogIcon, DocumentsIcon, ProjectsIcon } from '@sanity/icons'
+
 const PAGE_SINGLETONS = [
   { id: 'homePage', title: 'Home' },
   { id: 'aboutPage', title: 'About' },
@@ -20,6 +22,7 @@ export const structure = (S) =>
       S.listItem()
         .title('General site settings')
         .id('siteSettings')
+        .icon(CogIcon)
         .child(
           S.document()
             .schemaType('siteSettings')
@@ -32,6 +35,7 @@ export const structure = (S) =>
       S.listItem()
         .title('Pages')
         .id('pages')
+        .icon(DocumentsIcon)
         .child(
           S.list()
             .title('Pages')
@@ -50,5 +54,6 @@ export const structure = (S) =>
       S.listItem()
         .title('Projects')
         .id('projects')
+        .icon(ProjectsIcon)
         .child(S.documentTypeList('project').title('Projects')),
     ])

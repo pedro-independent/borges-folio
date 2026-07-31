@@ -1,8 +1,9 @@
 import { defineType, defineField } from 'sanity'
 
 // About page static content (singleton): intro lede, bio, portrait, a pull
-// quote, an awards image, and the CV (grouped sections of entries —
-// Experience / Education / Certificates / Awards).
+// quote, and the CV (grouped sections of entries — Experience / Education /
+// Certificates / Awards). Award certificate images are static front-end
+// assets keyed on the award label, not CMS fields.
 export default defineType({
   name: 'aboutPage',
   type: 'document',
@@ -26,13 +27,6 @@ export default defineType({
       options: { hotspot: true },
     }),
     defineField({ name: 'portraitCaption', type: 'string', title: 'Portrait caption', group: 'intro' }),
-    defineField({
-      name: 'awardsImage',
-      type: 'image',
-      title: 'Awards image',
-      group: 'intro',
-      options: { hotspot: true },
-    }),
 
     defineField({ name: 'quoteText', type: 'text', rows: 3, title: 'Quote', group: 'quote' }),
     defineField({ name: 'quoteAttribution', type: 'string', title: 'Attribution', group: 'quote' }),
