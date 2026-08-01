@@ -109,11 +109,13 @@ const cv = computed(() => {
   return FALLBACK_CV
 })
 
-// === Awards hover preview ===================================
-// Certificate image per award, keyed on the normalised row label so
-// CMS-entered rows keep matching as long as the label text does. Both CCP
-// 2021 mentions share the one 2021 certificate; "excelence" covers the
-// current CMS spelling.
+// === Awards cursor trail (MWG 020) ==========================
+// Moving the cursor over the Awards list leaves a trail of certificates:
+// every `resetDist` px of travel one spawns at the cursor, pops in with an
+// elastic bounce, drifts along the movement direction and shrinks away.
+// Port of mwg_020/assets/script.js; the award→certificate map below is kept
+// as documentation of which file belongs to which award — the trail cycles
+// through the unique certificates in awards-list order.
 const AWARD_IMAGES = {
   'top 2 ux designer': '/img/CCP_2023.jpg',
   'top 7 ux designer': '/img/CCP_2021.jpg',
@@ -142,113 +144,179 @@ const AWARD_IMAGES = {
   'honorable mentions | design for investment': '/img/Awwwards_honors_D4I.jpg',
   'mobile excellence | design for investment': '/img/Awwwards_Mobile_D4I.jpg',
 }
-const AWARD_PREVIEW_SRCS = [...new Set(Object.values(AWARD_IMAGES))]
+const AWARD_CERTIFICATES = [...new Set(Object.values(AWARD_IMAGES))]
 
-const awardKey = (label) => (label || '').toLowerCase().replace(/\s+/g, ' ').trim()
 const isAwardsGroup = (group) => /award/i.test(group.title || '')
-// Awards rows carry their certificate src in the DOM so the delegated pointer
-// handlers below survive the fallback→CMS re-render.
-const awardAttrs = (group, row, i) => {
-  const img = isAwardsGroup(group) ? AWARD_IMAGES[awardKey(row[0])] : null
-  return img ? { 'data-award-img': img, 'data-award-row': i } : null
-}
 
 const cvSection = useTemplateRef('cvSection')
-const previewEl = useTemplateRef('previewEl')
 let mm = null
 
 onMounted(() => {
   const { gsap } = useGSAP()
   mm = gsap.matchMedia()
 
-  // Desktop pointer devices only — tablet/mobile drop the image entirely
-  // (as the old static one did) and reduced-motion never shows it.
+  // Desktop pointer devices only, like the preview this replaces — touch has
+  // no cursor to trail, and reduced-motion gets no effect at all.
   mm.add('(min-width: 992px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)', () => {
-    const section = cvSection.value
-    const preview = previewEl.value
-    if (!section || !preview) return
+    const root = cvSection.value
+    if (!root) return
 
-    const imgBySrc = new Map(
-      Array.from(preview.querySelectorAll('img')).map((el) => [el.getAttribute('src'), el]),
-    )
+    // — MWG 020 state (mwg_020/assets/script.js, ported) —
+    let incr = 0
+    let oldIncrX = 0
+    let oldIncrY = 0
+    let started = false
+    const resetDist = window.innerWidth / 8
+    let indexImg = 0
+    const live = new Set() // in-flight images, so unmount can clear them
 
-    gsap.set(preview, { yPercent: -50 }) // centre the box on the tracked y
-    const yTo = gsap.quickTo(preview, 'y', { duration: 0.5, ease: 'power3' })
+    // Two trigger zones, one rule: certificates never sit on the text.
+    // — Over the awards LIST (right-hand column): spawns shift 52em LEFT so
+    //   the trail shadows the cursor in the empty half of the section
+    //   (list x ≈ 55.8–88.3em → spawns land at ≈ 3.8–36.3em).
+    // — Over the OPEN SPACE left of the column: spawns follow the cursor
+    //   directly, clamped so a certificate can't reach the column edge.
+    const emPx = parseFloat(getComputedStyle(root).fontSize) || 16
+    const offsetX = 52 * emPx
+    const imgW = 10.625 * emPx
+    const imgH = 14.625 * emPx
 
-    let current = null // <img> on top of the stack
-    let rowIndex = -1 // hovered award row — direction memory
-    let visible = false
-    let zTop = 1
+    function createMedia(x, y, deltaX, deltaY) {
+      // We create an image and set its url with the current item of the images array
+      const image = document.createElement('img')
+      image.setAttribute('src', AWARD_CERTIFICATES[indexImg])
+      image.className = 'about__award-trail'
+      image.setAttribute('aria-hidden', 'true')
 
-    const moveTo = (e, immediate) => {
-      const bounds = section.getBoundingClientRect()
-      const half = preview.offsetHeight / 2
-      const y = gsap.utils.clamp(half, bounds.height - half, e.clientY - bounds.top)
-      if (immediate) yTo(y, y)
-      else yTo(y)
-    }
+      // We add this image to the DOM
+      root.appendChild(image)
 
-    const setImage = (img, dir) => {
-      if (img === current) return
-      const prev = current
-      current = img
-      gsap.killTweensOf(img)
-      gsap.set(img, { autoAlpha: 1, zIndex: ++zTop })
-      if (!prev || !dir) {
-        gsap.set(img, { yPercent: 0 })
-        if (prev) gsap.set(prev, { autoAlpha: 0 })
-        return
-      }
-      // Moving down the list the new certificate rises from below (and vice
-      // versa) while the old one is nudged the opposite way underneath it.
-      gsap.killTweensOf(prev)
-      gsap.fromTo(img, { yPercent: dir * 100 }, { yPercent: 0, duration: 0.6, ease: 'osmo' })
-      gsap.to(prev, {
-        yPercent: dir * -35,
-        duration: 0.6,
-        ease: 'osmo',
+      const entry = { image }
+      live.add(entry)
+
+      const tl = gsap.timeline({
         onComplete: () => {
-          if (current !== prev) gsap.set(prev, { autoAlpha: 0, yPercent: 0 })
+          // when our timeline is finished, we remove our image from the DOM
+          image.remove()
+          live.delete(entry)
+          tl && tl.kill()
         },
       })
+      entry.tl = tl
+
+      tl.fromTo(image, {
+        // Add some randomness
+        xPercent: -50 + (Math.random() - 0.5) * 80,
+        yPercent: -50 + (Math.random() - 0.5) * 10,
+        scaleX: 1.3,
+        scaleY: 1.3,
+      }, {
+        scaleX: 1,
+        scaleY: 1,
+        ease: 'elastic.out(2, 0.6)', // Easing property responsible of the rebound effect
+        duration: 0.6,
+      })
+
+      tl.fromTo(image, {
+        // The first and second parameters are x and y (cursor position)
+        // We set the image at the current cursor position
+        x,
+        y,
+        rotation: (Math.random() - 0.5) * 20,
+      }, {
+        // We add deltaX and deltaY (the third and fourth parameters of the function)
+        x: '+=' + deltaX * 4,
+        y: '+=' + deltaY * 4,
+        rotation: (Math.random() - 0.5) * 20,
+        ease: 'power4.out',
+        duration: 1.5,
+      }, '<') // Means that the animation starts at the start of the previous tween
+
+      tl.to(image, {
+        duration: 0.3,
+        scale: 0.5, // Reduce the image later
+        delay: 0.1,
+        ease: 'back.in(1.5)',
+      })
+
+      // Loop back to the first item when we're out of range in our images array
+      indexImg = (indexImg + 1) % AWARD_CERTIFICATES.length
     }
 
-    const onOver = (e) => {
-      const row = e.target.closest('[data-award-img]')
-      if (!row || !section.contains(row)) return
-      const img = imgBySrc.get(row.dataset.awardImg)
-      if (!img) return
-      const idx = Number(row.dataset.awardRow)
-      const dir = visible ? Math.sign(idx - rowIndex) : 0
-      rowIndex = idx
-      setImage(img, dir)
-      if (!visible) {
-        visible = true
-        moveTo(e, true)
-        gsap.to(preview, { autoAlpha: 1, duration: 0.35, ease: 'power2.out', overwrite: 'auto' })
-      }
-    }
-
-    const onOut = (e) => {
-      const list = e.target.closest('[data-award-list]')
-      if (!list || (e.relatedTarget && list.contains(e.relatedTarget))) return
-      visible = false
-      rowIndex = -1
-      gsap.to(preview, { autoAlpha: 0, duration: 0.3, ease: 'power2.out', overwrite: 'auto' })
+    // Integration seams vs the original: coords are tracked across the whole
+    // CV section (so deltas stay continuous around the list), but distance only
+    // accumulates — and images only spawn — over the Awards list itself. The
+    // original's root sat at the viewport origin; ours doesn't, so x also
+    // subtracts the section's left edge. Delegated on the section so the rows
+    // survive the fallback→CMS re-render.
+    const onEnter = (e) => {
+      // Re-entering the section: resync so the first in-zone delta isn't a jump.
+      oldIncrX = e.clientX
+      oldIncrY = e.clientY
+      started = true
     }
 
     const onMove = (e) => {
-      if (visible) moveTo(e)
+      const valX = e.clientX
+      const valY = e.clientY
+      if (!started) {
+        started = true
+        oldIncrX = valX
+        oldIncrY = valY
+        return
+      }
+
+      // Zones: the awards list, or the open space anywhere left of the CV
+      // column (target = the section itself — the column swallows the rest).
+      const overList = !!e.target.closest('[data-award-list]')
+      const overOpen = !overList && !e.target.closest('.about__cv-col')
+
+      if (overList || overOpen) {
+        // Add the distance traveled on x + y
+        incr += Math.abs(valX - oldIncrX) + Math.abs(valY - oldIncrY)
+
+        if (incr > resetDist) {
+          incr = 0 // Reset the variable incr
+          const bounds = root.getBoundingClientRect()
+          const col = root.querySelector('.about__cv-col')
+          // Right-most point a certificate may ever reach (spawn OR drift):
+          // one image-width short of the column, covering the xPercent scatter.
+          const maxEndX = col ? col.getBoundingClientRect().left - bounds.left - imgW : Infinity
+          let x = valX - bounds.left
+          let dX = valX - oldIncrX
+          if (overList) x -= offsetX
+          else x = Math.min(x, maxEndX)
+          // A hard rightward flick drifts +dX×4 — cap it at the column edge.
+          if (x + dX * 4 > maxEndX) dX = (maxEndX - x) / 4
+          // Same vertically: the section clips the trail (overflow: hidden),
+          // so keep spawn AND drift inside it — 0.7×imgH covers the yPercent
+          // scatter and the 1.3 elastic pop, so a certificate is never cut
+          // by the section's top or bottom edge.
+          const minY = imgH * 0.75
+          const maxY = bounds.height - imgH * 0.75
+          let y = Math.max(minY, Math.min(valY - bounds.top, maxY))
+          let dY = valY - oldIncrY
+          if (y + dY * 4 > maxY) dY = (maxY - y) / 4
+          if (y + dY * 4 < minY) dY = (minY - y) / 4
+          createMedia(x, y, dX, dY)
+        }
+      }
+
+      // Reset after calculation to add the new delta on the next call
+      oldIncrX = valX
+      oldIncrY = valY
     }
 
-    // Delegated on the section so rows survive the fallback→CMS re-render.
-    section.addEventListener('pointerover', onOver)
-    section.addEventListener('pointerout', onOut)
-    section.addEventListener('pointermove', onMove)
+    root.addEventListener('mouseenter', onEnter)
+    root.addEventListener('mousemove', onMove)
     return () => {
-      section.removeEventListener('pointerover', onOver)
-      section.removeEventListener('pointerout', onOut)
-      section.removeEventListener('pointermove', onMove)
+      root.removeEventListener('mouseenter', onEnter)
+      root.removeEventListener('mousemove', onMove)
+      live.forEach(({ tl, image }) => {
+        tl?.kill()
+        image.remove()
+      })
+      live.clear()
     }
   })
 })
@@ -310,7 +378,7 @@ useSeo({
         <div v-for="group in cv" :key="group.title" class="about__cv-group">
           <h3 class="about__cv-heading">{{ group.title }}</h3>
           <ul class="about__cv-list" :data-award-list="isAwardsGroup(group) ? '' : undefined">
-            <li v-for="(row, i) in group.rows" :key="i" class="about__cv-row" v-bind="awardAttrs(group, row, i)">
+            <li v-for="(row, i) in group.rows" :key="i" class="about__cv-row">
               <span class="about__cv-role">{{ row[0] }}</span>
               <span class="about__cv-meta">{{ row[1] }}</span>
             </li>
@@ -318,10 +386,10 @@ useSeo({
         </div>
       </div>
 
-      <!-- Cursor-tracked certificate preview; all certificates stay stacked
-           so switching never waits on a network fetch. -->
-      <div ref="previewEl" class="about__cv-preview" aria-hidden="true">
-        <img v-for="src in AWARD_PREVIEW_SRCS" :key="src" :src="src" alt="" />
+      <!-- Hidden preload stack (the resource's `.medias` pattern) so a trail
+           certificate never pops in half-loaded on its first appearance. -->
+      <div class="about__award-medias" aria-hidden="true">
+        <img v-for="src in AWARD_CERTIFICATES" :key="src" :src="src" alt="" loading="lazy" />
       </div>
     </section>
   </div>
@@ -406,35 +474,40 @@ useSeo({
 
 /* CV — right-aligned column with the awards preview floating to its left */
 .about__cv {
-  position: relative;               /* positioning context for the preview */
+  position: relative;               /* positioning context for the trail */
+  overflow: hidden;                 /* clip trail images at the section edge */
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
   gap: 0.25em;
   padding: 5em 1.5em 7.5em;         /* 80 / 24 / 120 */
 }
-/* Certificate preview — same box the old static image occupied (170 × 234),
-   but cursor-tracked: GSAP drives `y` while hovering an Awards row; hidden
-   until then and never shown on touch / reduced-motion / ≤991px. */
-.about__cv-preview {
+/* Awards cursor trail (MWG 020) — certificates spawned at the cursor by JS
+   while moving over the Awards list. Same 170 × 234 footprint as the old
+   preview; clipped to the section like the resource clips to its root.
+   :deep() because the imgs are createElement'd (no scoped attribute). */
+.about__cv :deep(.about__award-trail) {
   position: absolute;
   top: 0;
-  right: 34.1875em;                 /* 24 pad + 519 column + 4 gap */
+  left: 0;
   width: 10.625em;                  /* 170 */
   height: 14.625em;                 /* 234 */
-  border-radius: 0.25em;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;               /* revealed via GSAP autoAlpha */
-  z-index: 2;
-}
-.about__cv-preview img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   object-fit: cover;
+  border-radius: 0.25em;
+  pointer-events: none;             /* never block the rows or steal the move */
+  will-change: transform;
+  z-index: 5;
+}
+
+/* Hidden preload stack — the resource's `.medias` pattern. */
+.about__award-medias img {
+  width: 1px;
+  height: 1px;
+  top: 0;
+  left: 0;
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
 }
 .about__cv-col {
   flex-shrink: 0;
@@ -468,7 +541,7 @@ useSeo({
 /* === TABLET (≤991px) — stack the CV image out, keep two columns ===== */
 @media (max-width: 991px) {
   .about__lede { font-size: 3.75em; }      /* 60px */
-  .about__cv-preview { display: none; }
+  .about__cv :deep(.about__award-trail) { display: none; }
   .about__bio { width: 32.5em; }
   .about__quote-mark { width: 1.5em; }     /* 24 — matches the work page */
 }
