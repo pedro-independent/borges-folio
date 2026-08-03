@@ -18,7 +18,7 @@ export const SITE_SETTINGS = groq`*[_type == "siteSettings"][0]{
 
 // Reusable project-card projection (Work grid / featured / home). `tint` is kept
 // as a graceful background fallback for existing data; new cards use `cover`.
-const CARD = groq`_id, title, subtitle, awards, comingSoon, year, tint, "cover": cover.asset->url, "slug": slug.current`
+const CARD = groq`_id, title, subtitle, category, awards, comingSoon, year, tint, "cover": cover.asset->url, "slug": slug.current`
 
 // --- Pages ----------------------------------------------------------------
 export const HOME_PAGE = groq`*[_type == "homePage"][0]{

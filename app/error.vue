@@ -27,8 +27,10 @@ useHead({ title: 'Page not found' })
 // (One nudge: 16, the left-edge bleeder, moved down 3.625em so the right-edge
 // bleeder (14) wrapping around the seam can never overlap it.)
 // 17–24 fill the band above the frame, 25–31 the band below — new photos laid
-// out in the design's rhythm with ≥1.875em clearance, verified non-overlapping
-// including every wrap-around continuation.
+// out in the design's rhythm: staggered depths (no two share a row) and x
+// offsets that avoid columns with the frame tiles, ≥1.875em clearance,
+// verified non-overlapping including every wrap-around continuation. 24 and 27
+// bleed over the tile edge on purpose, like the design's own edge bleeders.
 const PHOTOS = [
   { src: '/img/404/404-01.jpg', x: 3.3125, y: 61.125, w: 11.46875, h: 7.5 },
   { src: '/img/404/404-02.jpg', x: 23.0625, y: 59.1875, w: 7.5, h: 10 },
@@ -47,22 +49,22 @@ const PHOTOS = [
   { src: '/img/404/404-15.jpg', x: 36.375, y: 71.6875, w: 7.5, h: 10 },
   { src: '/img/404/404-16.jpg', x: -6.3125, y: 30.3125, w: 7.5, h: 10 },
   // — band above the design frame —
-  { src: '/img/404/404-17.jpg', x: 0.625, y: 2.5, w: 7.5, h: 13.3125 },
-  { src: '/img/404/404-18.jpg', x: 11.25, y: 3.125, w: 7.5, h: 13.3125 },
-  { src: '/img/404/404-19.jpg', x: 25, y: 5, w: 10, h: 7.5 },
-  { src: '/img/404/404-20.jpg', x: 42.5, y: 2.5, w: 7.5, h: 12.3125 },
-  { src: '/img/404/404-21.jpg', x: 51.875, y: 3.75, w: 7.5, h: 5.0625 },
-  { src: '/img/404/404-22.jpg', x: 61.875, y: 6.25, w: 7.5, h: 5.3125 },
-  { src: '/img/404/404-23.jpg', x: 73.125, y: 1.875, w: 7.5, h: 11.4375 },
-  { src: '/img/404/404-24.jpg', x: 82.5, y: 3.75, w: 7.5, h: 11.875 },
+  { src: '/img/404/404-17.jpg', x: 6.25, y: 4.375, w: 7.5, h: 13.3125 },
+  { src: '/img/404/404-18.jpg', x: 19.375, y: 1.25, w: 7.5, h: 13.3125 },
+  { src: '/img/404/404-19.jpg', x: 30, y: 9.375, w: 10, h: 7.5 },
+  { src: '/img/404/404-20.jpg', x: 46.875, y: 3.125, w: 7.5, h: 12.3125 },
+  { src: '/img/404/404-21.jpg', x: 56.875, y: 11.5, w: 7.5, h: 5.0625 },
+  { src: '/img/404/404-22.jpg', x: 67.5, y: 5.625, w: 7.5, h: 5.3125 },
+  { src: '/img/404/404-23.jpg', x: 76.875, y: 8.125, w: 7.5, h: 11.4375 },
+  { src: '/img/404/404-24.jpg', x: 86.25, y: 0.9375, w: 7.5, h: 11.875 },
   // — band below the design frame —
-  { src: '/img/404/404-25.jpg', x: 2.5, y: 83.75, w: 7.5, h: 11.1875 },
-  { src: '/img/404/404-26.jpg', x: 17.5, y: 86.25, w: 11.6875, h: 7.5 },
-  { src: '/img/404/404-27.jpg', x: 31.875, y: 84.6875, w: 7.5, h: 10 },
-  { src: '/img/404/404-28.jpg', x: 41.5625, y: 84.375, w: 7.5, h: 9.5 },
-  { src: '/img/404/404-29.jpg', x: 55, y: 83.75, w: 7.5, h: 11.1875 },
-  { src: '/img/404/404-30.jpg', x: 73.75, y: 83.125, w: 7.5, h: 11.625 },
-  { src: '/img/404/404-31.jpg', x: 64.375, y: 80.625, w: 7.5, h: 10.875 },
+  { src: '/img/404/404-25.jpg', x: 2.1875, y: 74.0625, w: 7.5, h: 11.1875 },
+  { src: '/img/404/404-26.jpg', x: 13.4375, y: 88.125, w: 11.6875, h: 7.5 },
+  { src: '/img/404/404-28.jpg', x: 27.8125, y: 83.75, w: 7.5, h: 9.5 },
+  { src: '/img/404/404-27.jpg', x: 39.6875, y: 87.1875, w: 7.5, h: 10 },
+  { src: '/img/404/404-29.jpg', x: 50, y: 84.6875, w: 7.5, h: 11.1875 },
+  { src: '/img/404/404-31.jpg', x: 65.3125, y: 79.375, w: 7.5, h: 10.875 },
+  { src: '/img/404/404-30.jpg', x: 78.4375, y: 82.5, w: 7.5, h: 11.625 },
 ]
 const photoStyle = (p) => ({ left: p.x + 'em', top: p.y + 'em', width: p.w + 'em', height: p.h + 'em' })
 

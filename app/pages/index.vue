@@ -1,8 +1,8 @@
 <script setup>
 // Home reads the homePage singleton; each Hp* section falls back to its Figma
 // copy when a field is empty. Lazy on the client so the fetch never suspends the
-// page transition (see useSanity.js). The bespoke portfolio showcase stays
-// hardcoded in HpPortfolio — only its title/CTA come from the CMS.
+// page transition (see useSanity.js). The portfolio showcase renders the doc's
+// curated portfolioProjects (each card links to its case study).
 import { HOME_PAGE } from '~/utils/sanityQueries'
 
 const { data } = await useSanityQuery('homePage', HOME_PAGE, {}, { lazy: import.meta.client })
@@ -25,7 +25,7 @@ useSeo({
          latches, and this wrapper's containment un-parks it once the
          industries runway ends — see .home__stage rules in main.css. -->
     <div class="home__stage">
-      <HpPortfolio :title="cms.portfolioTitle" :cta="cms.portfolioCta" />
+      <HpPortfolio :title="cms.portfolioTitle" :cta="cms.portfolioCta" :projects="cms.portfolioProjects" />
       <HpIndustries
         :industries="cms.industries"
         :left-label="cms.industriesLeftLabel"

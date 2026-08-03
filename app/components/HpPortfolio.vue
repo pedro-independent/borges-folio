@@ -1,42 +1,65 @@
 <script setup>
-import { computed, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, onBeforeUnmount, resolveComponent, useTemplateRef, watch } from 'vue'
 
-// The home portfolio is a bespoke showcase (phone mockups, specific imagery) that
-// doesn't map to the generic project-card model, so `projects` stays hardcoded.
-// Only the section title + CTA come from the homePage CMS doc.
+// The showcase reads the homePage doc's curated `portfolioProjects` (passed in
+// by index.vue as raw CMS cards) — each card links to its case study. The
+// Figma copy below is the offline fallback; its rows carry no slug, so they
+// render as plain articles.
 const props = defineProps({
   title: { type: String, default: null },
   cta: { type: Object, default: null },
-  projects: {
-    type: Array,
-    default: () => [
-      {
-        title: 'Nova – Executive Education',
-        subtitle: 'Executive Education Platform',
-        role: 'Lead UX/UI Designer',
-        media: { type: 'blank' },
-      },
-      {
-        title: 'MEO Beachcam',
-        subtitle: 'Medical cannabis healthcare provider platform',
-        role: 'Lead UX/UI Designer',
-        media: { type: 'phone', screen: '/img/meo-screen.png', frame: '/img/meo-phone.png' },
-      },
-      {
-        title: 'ClickGuard',
-        subtitle: 'B2B SaaS Conversion focused website',
-        role: 'Lead UX/UI Designer',
-        media: { type: 'image', src: '/img/project-clickguard.png' },
-      },
-      {
-        title: 'Amuse Bouche',
-        subtitle: 'Award-winning marketing consultant agency website',
-        role: 'UX/UI Designer',
-        media: { type: 'image', src: '/img/project-amusebouche.png', bg: 'lavender' },
-      },
-    ],
-  },
+  projects: { type: Array, default: null },
 })
+
+const FALLBACK_PROJECTS = [
+  {
+    title: 'Nova – Executive Education',
+    subtitle: 'Executive Education Platform',
+    role: 'Lead UX/UI Designer',
+    media: { type: 'blank' },
+  },
+  {
+    title: 'MEO Beachcam',
+    subtitle: 'Medical cannabis healthcare provider platform',
+    role: 'Lead UX/UI Designer',
+    media: { type: 'phone', screen: '/img/meo-screen.png', frame: '/img/meo-phone.png' },
+  },
+  {
+    title: 'ClickGuard',
+    subtitle: 'B2B SaaS Conversion focused website',
+    role: 'Lead UX/UI Designer',
+    media: { type: 'image', src: '/img/project-clickguard.png' },
+  },
+  {
+    title: 'Amuse Bouche',
+    subtitle: 'Award-winning marketing consultant agency website',
+    role: 'UX/UI Designer',
+    media: { type: 'image', src: '/img/project-amusebouche.png', bg: 'lavender' },
+  },
+]
+
+// CMS card → showcase row. The third meta line shows the project's category
+// (the card projection carries no role field); the cover renders as the media
+// (CDN-resized — the card paints at 520px, so 1200 covers 2× screens), with
+// the legacy tint as a flat placeholder when no cover is uploaded yet.
+const projects = computed(() => {
+  if (!props.projects?.length) return FALLBACK_PROJECTS
+  return props.projects.map((p) => ({
+    title: p.title,
+    subtitle: p.subtitle,
+    role: p.category || '',
+    slug: p.comingSoon ? null : p.slug,
+    media: p.cover
+      ? { type: 'image', src: `${p.cover}?w=1200&fit=max&auto=format` }
+      : { type: 'blank', tint: p.tint },
+  }))
+})
+
+// Published cards link to their case study; fallback/coming-soon rows stay
+// plain <article>s (same convention as the work page grid).
+const NuxtLink = resolveComponent('NuxtLink')
+const rowIs = (p) => (p.slug ? NuxtLink : 'article')
+const rowTo = (p) => (p.slug ? `/work/${p.slug}` : undefined)
 
 const title = computed(() => props.title || 'My portfolio')
 const cta = computed(() => props.cta || { label: 'View more projects', href: '#work' })
@@ -54,8 +77,14 @@ const textRight = (i) => i % 2 === 0
 const section = useTemplateRef('section')
 let mm = null
 
-onMounted(() => {
+// (Re)build all scroll work against the CURRENT row elements. The home fetch is
+// lazy, so on a hard load the component mounts with the fallback rows and the
+// CMS cards re-render them as new elements (article → NuxtLink) — tweens built
+// at mount would keep pointing at the detached fallback nodes and the metas
+// would never fade. The projects watcher below tears down and rebuilds.
+function build() {
   const { gsap, ScrollTrigger } = useGSAP()
+  mm?.revert()
   mm = gsap.matchMedia()
 
   // The scrub triggers need a FLOW-STABLE trigger element (one whose rect a
@@ -184,6 +213,16 @@ onMounted(() => {
 
     return () => triggers.forEach((t) => t?.kill())
   })
+}
+
+onMounted(build)
+
+// Fallback → CMS swap (or any later edit of the curated list): wait for the new
+// rows to render, then rebind. Guarded against mid-transition rebuilds — the
+// frozen outgoing page must keep its (killed) triggers untouched.
+watch(projects, async () => {
+  await nextTick()
+  if (section.value && !transitioning.value) build()
 })
 
 // Same transition-aware teardown as HpIndustries: during a page transition
@@ -209,7 +248,16 @@ onBeforeUnmount(() => {
       <div class="portfolio__anno-pin">
         <HpPortfolioAnnotations class="anno--portfolio" />
       </div>
-      <article v-for="(p, i) in props.projects" :key="p.title" class="project">
+      <!-- Whole row is the link (media or text hits both navigate); fallback
+           and coming-soon rows render as plain <article>s instead. -->
+      <component
+        :is="rowIs(p)"
+        v-for="(p, i) in projects"
+        :key="p.title"
+        :to="rowTo(p)"
+        class="project"
+        :aria-label="p.slug ? `${p.title} — view case study` : undefined"
+      >
         <!-- spacer first when text is on the right -->
         <div v-if="textRight(i)" class="project__spacer" />
 
@@ -227,6 +275,7 @@ onBeforeUnmount(() => {
             'project__media--blank': p.media.type === 'blank',
             'project__media--lavender': p.media.bg === 'lavender' || p.media.type === 'phone',
           }"
+          :style="p.media.type === 'blank' && p.media.tint ? { background: p.media.tint } : undefined"
         >
           <img v-if="p.media.type === 'image'" :src="p.media.src" :alt="p.title" />
 
@@ -247,7 +296,7 @@ onBeforeUnmount(() => {
 
         <!-- spacer last when text is on the left -->
         <div v-else class="project__spacer" />
-      </article>
+      </component>
     </div>
 
     <div class="portfolio__cta">
