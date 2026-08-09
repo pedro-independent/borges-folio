@@ -99,6 +99,17 @@ const cardMedia = (p) =>
     : p.tint
       ? { background: p.tint }
       : null
+
+// The buttons plugin splits [data-button-004] card titles on page:finish, but on
+// client-side navigation the lazy fetch above re-renders the cards AFTER that
+// (fallback → CMS swap; article → NuxtLink), leaving fresh unsplit titles with
+// no hover flip. Re-scan once the swap has rendered (already-split labels are
+// skipped, same as the menu drawer's onEnter re-scan).
+const nuxtApp = useNuxtApp()
+watch(data, async () => {
+  await nextTick()
+  nuxtApp.$splitButtons?.()
+})
 </script>
 
 <template>
@@ -108,11 +119,21 @@ const cardMedia = (p) =>
     <!-- Featured: one large card + a pair of smaller ones -->
     <section class="work__featured container" data-theme-section="light">
       <div class="work__featured-row">
-        <component :is="cardIs(featured[0])" :to="cardTo(featured[0])" class="work__card work__card--hero">
+        <component
+          :is="cardIs(featured[0])"
+          :to="cardTo(featured[0])"
+          class="work__card work__card--hero button-004"
+          :data-button-004="featured[0].comingSoon ? undefined : ''"
+        >
           <span class="work__card-media" :style="cardMedia(featured[0])" />
           <div class="work__card-info">
             <div class="work__card-head">
-              <h2 class="work__card-title">{{ featured[0].title }}</h2>
+              <h2 class="work__card-title">
+                <span class="button-004__inner">
+                  <span data-button-004-text class="button-004__text is--default">{{ featured[0].title }}</span>
+                  <span aria-hidden="true" data-button-004-text class="button-004__text is--hover">{{ featured[0].title }}</span>
+                </span>
+              </h2>
               <span v-if="featured[0].awards" class="work__badge work__badge--award">{{ awardLabel(featured[0].awards) }}</span>
             </div>
             <p class="work__card-desc">{{ featured[0].desc }}</p>
@@ -120,11 +141,23 @@ const cardMedia = (p) =>
         </component>
 
         <div class="work__featured-pair">
-          <component :is="cardIs(p)" :to="cardTo(p)" v-for="p in featured.slice(1)" :key="p.slug" class="work__card">
+          <component
+            :is="cardIs(p)"
+            :to="cardTo(p)"
+            v-for="p in featured.slice(1)"
+            :key="p.slug"
+            class="work__card button-004"
+            :data-button-004="p.comingSoon ? undefined : ''"
+          >
             <span class="work__card-media" :style="cardMedia(p)" />
             <div class="work__card-info">
               <div class="work__card-head">
-                <h2 class="work__card-title">{{ p.title }}</h2>
+                <h2 class="work__card-title">
+                  <span class="button-004__inner">
+                    <span data-button-004-text class="button-004__text is--default">{{ p.title }}</span>
+                    <span aria-hidden="true" data-button-004-text class="button-004__text is--hover">{{ p.title }}</span>
+                  </span>
+                </h2>
                 <span v-if="p.awards" class="work__badge work__badge--award">{{ awardLabel(p.awards) }}</span>
               </div>
               <p class="work__card-desc">{{ p.desc }}</p>
@@ -148,11 +181,23 @@ const cardMedia = (p) =>
     <!-- Project grid — uniform 3-column image cards (Figma 15506:343) -->
     <section class="work__grid container" data-theme-section="light">
       <div class="work__grid-list">
-        <component :is="cardIs(p)" :to="cardTo(p)" v-for="p in grid" :key="p.slug" class="work__card">
+        <component
+          :is="cardIs(p)"
+          :to="cardTo(p)"
+          v-for="p in grid"
+          :key="p.slug"
+          class="work__card button-004"
+          :data-button-004="p.comingSoon ? undefined : ''"
+        >
           <span class="work__card-media" :style="cardMedia(p)" />
           <div class="work__card-info">
             <div class="work__card-head">
-              <h2 class="work__card-title">{{ p.title }}</h2>
+              <h2 class="work__card-title">
+                <span class="button-004__inner">
+                  <span data-button-004-text class="button-004__text is--default">{{ p.title }}</span>
+                  <span aria-hidden="true" data-button-004-text class="button-004__text is--hover">{{ p.title }}</span>
+                </span>
+              </h2>
               <!-- Award and "coming soon" can co-occur (e.g. Rocco). -->
               <div v-if="p.awards || p.comingSoon" class="work__badges">
                 <span v-if="p.awards" class="work__badge work__badge--award">{{ awardLabel(p.awards) }}</span>

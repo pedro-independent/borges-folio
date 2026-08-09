@@ -86,8 +86,10 @@ async function onSubmit() {
         company: form.company,
       },
     })
+    // 'sent' swaps the whole form for the success state (Figma 15533:245) —
+    // no status line needed; the success block itself is the announcement.
     status.value = 'sent'
-    statusMessage.value = 'Thanks — your message is on its way. I’ll get back to you soon.'
+    statusMessage.value = ''
     form.name = ''
     form.email = ''
     form.detail = ''
@@ -193,7 +195,37 @@ onBeforeUnmount(() => clearInterval(clock))
         <div class="contact-page__block">
           <h1 class="contact-page__title">{{ heading }}</h1>
 
-          <form class="contact-page__form" novalidate @submit.prevent="onSubmit">
+          <!-- Success state (Figma 15533:245): the form swaps for a centred
+               thank-you + hand-drawn arrow/note filling the form's slot, with
+               the CTA dimmed to a static "message sent". role=status makes the
+               swap announce itself to AT in place of the old status line. -->
+          <div v-if="status === 'sent'" class="contact-page__success" role="status">
+            <div class="contact-page__success-body">
+              <p class="contact-page__success-title">Your message was sent. Thank you!</p>
+              <!-- Same hand-drawn arrow as the annotation connectors, rotated
+                   to point up at the message (exported Figma geometry). -->
+              <svg
+                class="contact-page__success-arrow"
+                viewBox="0 0 47 13.5"
+                fill="none"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                  <path d="M45.5001 6.22317C34.9465 6.06352 24.5066 5.41042 14.0264 7.49597C13.2247 7.65551 9.92713 8.67273 9.50011 7.26455" />
+                  <path d="M7.12135 1.50008C6.5672 1.92147 0.826002 5.33921 1.5658 6.7223C2.04643 7.62088 3.78807 8.45466 4.62135 9.00008C6.36404 10.1408 8.31177 10.966 10.1214 12.0001" />
+                </g>
+              </svg>
+              <p class="contact-page__success-note">I will try to respond as quick as possible</p>
+            </div>
+            <div class="field contact-page__submit">
+              <div class="contact-page__send is-sent">message sent</div>
+              <!-- invisible but kept in flow so the slot height matches the form -->
+              <p class="contact-page__required is-ghost" aria-hidden="true">*Required fields</p>
+            </div>
+          </div>
+
+          <form v-else class="contact-page__form" novalidate @submit.prevent="onSubmit">
             <div class="field">
               <label class="field__label" for="contact-name">Name *</label>
               <input
@@ -488,6 +520,60 @@ onBeforeUnmount(() => clearInterval(clock))
    button never shifts. Errors take the accent blue (the palette has no red). */
 .contact-page__status { opacity: 0.6; }
 .contact-page__status.is-error { color: var(--color-blue); opacity: 1; }
+
+/* --- Success state (Figma 15533:245) --- */
+/* Fills the same 599px slot the form occupied (its designed height), so the
+   email fallback + social below don't jump when the form swaps out. */
+.contact-page__success {
+  height: 37.4375em;                /* 599 — the form's slot */
+  display: flex;
+  flex-direction: column;
+  gap: 2em;                         /* 32 — same rhythm as the form */
+}
+.contact-page__success-body {
+  flex: 1 0 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;                         /* 16 */
+  animation: success-in 0.6s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes success-in {
+  from { opacity: 0; transform: translateY(0.75em); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-page__success-body { animation: none; }
+}
+.contact-page__success-title {
+  width: 100%;
+  font-size: 2.5em;                 /* 40 */
+  line-height: normal;
+  color: var(--color-ink);
+}
+/* Hand-drawn arrow, drawn horizontal (47 × 13.5 export) and rotated to point
+   up at the message; the wrapper reserves its rotated 10.5 × 44 footprint. */
+.contact-page__success-arrow {
+  width: 2.9375em;                  /* 47 (44 line + stroke overflow) */
+  height: 0.84375em;                /* 13.5 */
+  margin: 1em 0;                    /* centre of the rotated 44px footprint */
+  color: var(--color-blue);
+  transform: rotate(90deg) scaleY(-1);
+  overflow: visible;
+}
+.contact-page__success-note {
+  width: 13.375em;                  /* 214 */
+  font-family: var(--font-script);
+  font-size: 2em;                   /* 32 */
+  line-height: 0.9375;              /* 30 */
+  color: var(--color-blue);
+  transform: rotate(-2.39deg);
+}
+/* Static, non-interactive stand-in for the send button (same box, dimmed). */
+.contact-page__send.is-sent { opacity: 0.2; }
+.contact-page__required.is-ghost { opacity: 0; }
 
 /* Honeypot — removed from view and from the a11y tree without display:none,
    which some bots treat as a signal to skip the field. */

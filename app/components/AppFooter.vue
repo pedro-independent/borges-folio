@@ -94,22 +94,27 @@ onMounted(() => {
     // — Entrance (once, when the CTA scrolls into view) —
     // 1. The wordmark letters rise out of the box bottom with a stagger (both
     //    stacked layers split identically so muted + fill stay superimposed;
-    //    .footer__wordmark's overflow:hidden is the mask).
-    // 2. The arrow starts parked against the wordmark (shifted left by the
-    //    photo slot, measured at runtime — the slot narrows on tablet and is
-    //    gone on mobile) and slides to its resting place while the photo
-    //    clip-reveals in the gap it opens.
+    //    .footer__wordmark's overflow:hidden is the mask), and the arrow rises
+    //    with them like the wordmark's final glyph — same masked rise, joined
+    //    to the same stagger one slot after the last char.
+    // 2. Only once the text (arrow included) has fully landed, the arrow —
+    //    parked against the wordmark, shifted left by the photo slot measured
+    //    at runtime (the slot narrows on tablet and is gone on mobile) —
+    //    slides to its resting place while the photo clip-reveals in the gap.
     const layers = Array.from(el.querySelectorAll('.footer__wordmark p'))
     const photo = el.querySelector('.footer__photo')
     const arrow = el.querySelector('.footer__arrow')
+    const arrowLayers = Array.from(el.querySelectorAll('.footer__arrow-layer'))
     const gapPx = parseFloat(getComputedStyle(el).columnGap) || 0
     const slideDx = photo?.offsetWidth ? -(photo.offsetWidth + gapPx) : 0
 
     // Pre-split initial state, applied before first paint: whole layers sit
-    // below the box (clipped), the arrow is hidden (revealed bottom-up with the
-    // letters) and parked, the photo hidden.
+    // below the box (clipped), the arrow layers sit below the arrow box (its
+    // overflow:hidden is the mask — the drop is measured per layer/tier since
+    // the container's padding and the fill layer's top offset vary), the arrow
+    // is parked and the photo hidden.
     gsap.set(layers, { yPercent: 110 })
-    gsap.set(arrow, { clipPath: 'inset(100% 0% 0% 0%)' })
+    gsap.set(arrowLayers, { y: (i, t) => arrow.clientHeight - t.offsetTop })
     if (slideDx) {
       gsap.set(arrow, { x: slideDx })
       gsap.set(photo, { clipPath: 'inset(0% 100% 0% 0%)' })
@@ -132,6 +137,10 @@ onMounted(() => {
       }
       if (disposed) return
 
+      // Chars-per-layer count places the arrow's rise in the stagger sequence
+      // as the char after the last letter; the block fallback has no stagger,
+      // so the arrow rises with the block at 0.
+      let charCount = 0
       if (SplitText) {
         split = new SplitText(layers, { type: 'chars' })
         gsap.set(layers, { yPercent: 0 })
@@ -139,6 +148,7 @@ onMounted(() => {
         // stacks rise in perfect sync.
         layers.forEach((layer) => {
           const chars = split.chars.filter((c) => layer.contains(c))
+          charCount = chars.length
           entrance.fromTo(
             chars,
             { yPercent: 110 },
@@ -149,13 +159,14 @@ onMounted(() => {
       } else {
         entrance.to(layers, { yPercent: 0, duration: 0.8 }, 0)
       }
-      // The arrow reveals bottom-to-top alongside the letters (still parked at
-      // the wordmark), then slides to its resting place once they've landed.
-      const lettersEnd = entrance.duration()
-      entrance.to(arrow, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.8 }, 0)
+      // The arrow rises out of the box like the wordmark's final glyph (still
+      // parked at the wordmark), then — only once everything has fully
+      // revealed — slides to its resting place while the photo clip-reveals.
+      entrance.to(arrowLayers, { y: 0, duration: 0.8 }, charCount * 0.05)
+      const revealEnd = entrance.duration()
       if (slideDx) {
         entrance
-          .to(arrow, { x: 0, duration: 0.9 }, lettersEnd - 0.3)
+          .to(arrow, { x: 0, duration: 0.9 }, revealEnd)
           .to(photo, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.9 }, '<')
       }
 
@@ -251,7 +262,8 @@ onMounted(() => {
       split?.revert()
       gsap.set(layers, { clearProps: 'transform' })
       if (photo) gsap.set(photo, { clearProps: 'clipPath' })
-      if (arrow) gsap.set(arrow, { clearProps: 'transform,clipPath' })
+      if (arrow) gsap.set(arrow, { clearProps: 'transform' })
+      gsap.set(arrowLayers, { clearProps: 'transform' })
     }
   })
 })

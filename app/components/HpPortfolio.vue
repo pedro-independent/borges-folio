@@ -218,11 +218,25 @@ function build() {
 onMounted(build)
 
 // Fallback → CMS swap (or any later edit of the curated list): wait for the new
-// rows to render, then rebind. Guarded against mid-transition rebuilds — the
-// frozen outgoing page must keep its (killed) triggers untouched.
+// rows to render, then rebind. Deferred (not skipped) during a page transition:
+// on client-side navigation home the payload cache is hydration-only, so the
+// fetch re-runs and resolves while the incoming page is still position:fixed —
+// rebuilding then would measure the clipped layout, but never rebuilding leaves
+// the scrubs bound to the detached fallback rows (metas pile up in the stack).
+// Wait for app.vue to settle the page (clearProps + ScrollTrigger.refresh),
+// then rebind against the real rows — same pattern as AppFooter's entrance.
+let stopWait = null
 watch(projects, async () => {
   await nextTick()
-  if (section.value && !transitioning.value) build()
+  if (!section.value) return
+  if (!transitioning.value) return build()
+  if (stopWait) return // already waiting; the rebuild reads the latest rows
+  stopWait = watch(transitioning, (v) => {
+    if (v) return
+    stopWait()
+    stopWait = null
+    if (section.value) build()
+  })
 })
 
 // Same transition-aware teardown as HpIndustries: during a page transition
@@ -232,6 +246,8 @@ watch(projects, async () => {
 // still painted.
 const transitioning = useState('page-transitioning', () => false)
 onBeforeUnmount(() => {
+  stopWait?.()
+  stopWait = null
   if (!transitioning.value) mm?.revert()
 })
 </script>
