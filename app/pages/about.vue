@@ -341,6 +341,10 @@ useSeo({
 
     <!-- Lead / bio -->
     <section class="about__lead container" data-theme-section="light">
+      <!-- Legend first: it sits in the section's top padding, above the
+           portrait and the copy (see .anno__note--ab-legend in main.css). -->
+      <AbLegend />
+
       <figure class="about__aside">
         <div class="about__photo about__photo--portrait">
           <img :src="portrait" alt="Pedro Borges" />

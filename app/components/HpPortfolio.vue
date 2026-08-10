@@ -83,58 +83,15 @@ let mm = null
 // at mount would keep pointing at the detached fallback nodes and the metas
 // would never fade. The projects watcher below tears down and rebuilds.
 function build() {
-  const { gsap, ScrollTrigger } = useGSAP()
+  const { gsap } = useGSAP()
   mm?.revert()
   mm = gsap.matchMedia()
 
-  // The scrub triggers need a FLOW-STABLE trigger element (one whose rect a
-  // mid-scroll refresh can trust). The section itself parks (sticky) while the
-  // industries block is latched, so use the .home__stage wrapper instead — it
-  // shares the section's top edge, so the same offsets hold. Fall back to the
-  // section when unwrapped (the park CSS is scoped to the wrapper, so the
-  // section is flow-static in that case anyway).
-  const stage = section.value.closest('.home__stage') || section.value
-
-  // Park the portfolio while the industries block (next in the stage) is
-  // latched, and release it IN SYNC with that block. Three coupled pieces,
-  // all measured from the industries block so main.css stays the source:
-  //  - top = latch line − content height → parks the instant the content
-  //    bottom meets the latching industries block (they're flow-adjacent).
-  //  - padding-bottom += industries block height, industries margin-top −=
-  //    the same → net-zero layout, but the sticky BOX now ends exactly where
-  //    the industries block's box ends. Sticky containment (.home__stage)
-  //    therefore pushes this section at the SAME scroll where the industries
-  //    block releases — both ride up in flow-lockstep afterwards, portfolio
-  //    bottom kissing the industries top, reading as normal scrolling
-  //    instead of one section sliding over the other.
-  // All widths — mirrors the industries latch, which runs on every tier. The
-  // reveal scrub only runs without reduced motion, but parking is inert when
-  // the runway never grows, so the broader gate is safe.
-  mm.add('all', () => {
-    const el = section.value
-    const basePad = parseFloat(getComputedStyle(el).paddingBottom) || 0
-    const industries = document.querySelector('.industries')
-    const block = document.querySelector('.industries__sticky')
-    const park = () => {
-      if (!industries || !block) return // no industries section — never park
-      const latch = parseFloat(getComputedStyle(block).top)
-      if (Number.isNaN(latch)) return
-      const blockH = block.offsetHeight
-      el.style.paddingBottom = basePad + blockH + 'px'
-      industries.style.marginTop = -blockH + 'px'
-      // offsetHeight includes the extended padding — subtract it back to park
-      // the CONTENT bottom (CTA + original padding) at the latch line.
-      el.style.top = latch - (el.offsetHeight - blockH) + 'px'
-    }
-    park()
-    ScrollTrigger.addEventListener('refreshInit', park) // re-measure with every refresh
-    return () => {
-      ScrollTrigger.removeEventListener('refreshInit', park)
-      el.style.top = ''
-      el.style.paddingBottom = ''
-      if (industries) industries.style.marginTop = ''
-    }
-  })
+  // The section is flow-static (it scrolls away as ordinary content — only its
+  // card rows latch), so its own rect is stable and it can serve as the trigger
+  // for the scrubs below: a mid-scroll ScrollTrigger.refresh() can't corrupt the
+  // start/end values even while rows are latched.
+  const stage = section.value
 
   // ≥480 only — on the mobile tier the rows aren't sticky (see main.css), so
   // there's no stack to embellish and the cards scroll as plain content.
@@ -150,9 +107,8 @@ function build() {
     // Cards overlap in flow (see main.css), so the next card starts gaining on
     // this one the instant this row latches — one covering window runs from
     // each row's latch to the next row's latch. Positions come from offsetTop
-    // (flow layout, unaffected by sticky latching) against the stage — which
-    // never leaves flow and shares the section's top edge — so a
-    // ScrollTrigger.refresh() while rows are latched (or the section is parked)
+    // (flow layout, unaffected by sticky latching) against the section, which
+    // never leaves flow — so a ScrollTrigger.refresh() while rows are latched
     // can't corrupt the start/end values. stickyTop reads the CSS `top` calc
     // resolved to px, following the per-tier values.
     const stickyTop = (row) => parseFloat(getComputedStyle(row).top) || 0

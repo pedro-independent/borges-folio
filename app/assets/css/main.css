@@ -94,6 +94,11 @@ html { cursor: var(--cursor); }
   --color-accent: var(--color-blue);
   --color-line: rgba(6, 6, 6, 0.2);
 
+  /* Height of the fixed nav bar (padding 1.5em × 2 + the 2.5em tall CTA/menu
+     row). Sections that pin to the top of the viewport offset by it so their
+     content doesn't sit behind the bar; kept in sync with `.nav` padding. */
+  --nav-h: 5.5em;
+
   --font-display: 'PP Neue Montreal', 'Helvetica Neue', Arial, sans-serif;
   --font-script: 'GFY Palmer', cursive;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
@@ -208,9 +213,10 @@ main { display: block; }
   inset: 0 0 auto 0;
   z-index: 10;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.25em;
-  padding: 1.5em;                  /* 24px */
+  padding: 1em 1.25em;    
+  background-color: var(--color-cream);
 }
 .nav__logo {
   width: 9.55em;                   /* 152.78px — default (small) logo */
@@ -310,8 +316,12 @@ main { display: block; }
    wordmark to near-black and the CTA to the dark variant). */
 .nav__logo img,
 .nav__menu { transition: color 0.3s ease, filter 0.3s ease; }
+.nav { transition: background-color 0.3s ease; }
 
-[data-theme-nav="dark"] .nav__menu { color: var(--color-off-white); }
+/* Over a DARK section the bar drops its cream fill entirely and floats on the
+   section's own background (the wordmark is already #FAFAFA, so it reads). */
+[data-theme-nav="dark"] .nav { background-color: transparent; }
+[data-theme-nav="dark"] .nav__menu { color: var(--color-off-white); background-color: transparent; }
 
 [data-theme-nav="light"] .nav__menu { color: var(--color-ink); }
 [data-theme-nav="light"] .nav__logo img { filter: brightness(0); }
@@ -627,16 +637,22 @@ main { display: block; }
 .anno__mark-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 .anno__mark-num p { font-size: 1em; line-height: 1; transform: rotate(4.9deg); } /* override the 2em note default */
 
-/* --- Intro: ellipse + "1" + legend --- */
+/* --- Intro: ellipse + "1" --- */
 .anno--ab-intro { top: 0; }
 .anno__svg--ab-ellipse { left: 2.25em; top: 6.9em; width: 85.5em; height: 23em; }
 .anno__mark--ab-1 { left: 25.7em; top: 5.34em; }
 
+/* --- Lead/bio: the "Organizing content" legend (AbLegend.vue) ---
+   First child of .about__lead, so these offsets are measured from THAT
+   section's top-left. It parks inside the section's 7.5em top padding — the
+   ~3.6em block ends clear of the portrait/copy row, i.e. above every other
+   child — and keeps the container's 1.5em gutter as its left edge. */
+.anno--ab-legend { top: 0; }
 .anno__note--ab-legend {
-  left: 1.5em; top: 30.875em;       /* 24 / 494 */
+  left: 1.5em; top: 2.5em;
   font-family: var(--font-script);
   color: var(--color-blue);
-  display: flex; flex-direction: column; gap: 0.5em;
+  display: flex; flex-direction: column; gap: 0.5em; align-items: flex-start;
 }
 .anno__note--ab-legend p { font-size: 0.75em; line-height: 1.5; } /* "Organizing content" — 12px */
 .ab-legend__row { display: flex; align-items: center; gap: 1.5em; margin: 0; padding: 0; list-style: none; }
@@ -672,19 +688,12 @@ main { display: block; }
 }
 
 /* === PAGE: PORTFOLIO ====================================== */
+/* Scrolls away as ordinary flow content: once the card stack releases, the whole
+   section rides up and off the top of the screen, and only then does the
+   industries block below it reach the top and latch (see .industries__sticky).
+   The section is therefore entirely off-screen before the industries list pins —
+   no parking, no two-section overlap. */
 .portfolio { position: relative; isolation: isolate; padding-bottom: 12.5em; }
-/* Inside the home stage the portfolio PARKS while the industries section is
-   latched. HpPortfolio.vue sets the geometry: a negative `top` parks it the
-   instant its content bottom meets the latching industries block, and its
-   box is extended downward (padding) by the industries block height — with
-   the industries section pulled up by the same amount — so the containment
-   push (.home__stage ends with the industries runway) lands at the EXACT
-   scroll where the industries block releases. Both then ride up together in
-   flow-lockstep: no overlap, no cover, reads as normal scrolling. Scoped to
-   the wrapper: without it the portfolio scrolls normally. All widths — the
-   industries latch (and so the park) runs on every tier. `top` stays auto
-   until the JS sets it, so this rule alone changes nothing. */
-.home__stage .portfolio { position: sticky; }
 .portfolio__title {
   text-align: center;
   white-space: nowrap;
@@ -795,15 +804,17 @@ main { display: block; }
    in JS (HpIndustries.vue) to `sticky height + scroll distance`; the gutter +
    max-width come from `.container` on the sticky child. */
 .industries { position: relative; }
-/* Latch with the section's top edge (border row + first items — the focal
-   point per the Figma annotation) at ~42% of the viewport; the rest of the
-   ~50em list window runs below the fold and items rise up through it. A
-   fixed vh (not a centering calc) so short/wide viewports can never push the
-   latch above the fold. HpIndustries.vue reads this RESOLVED value
-   (getComputedStyle .top) for the scrub start, so CSS is the single source.
-   All widths — the reveal runs on mobile too; under reduced motion the JS
-   never sizes the runway, so the sticky simply has no travel and stays inert. */
-.industries__sticky { position: sticky; top: 42vh; }
+/* Latches at the TOP of the page: the block pins with its border row against
+   the top of the viewport (offset by the nav bar so the row and first items
+   aren't hidden behind it) and the whole ~50em list window sits on screen while
+   items rise through it. Pinning at the top is also what guarantees the clean
+   handoff — the block's top edge only reaches the top of the screen once the
+   portfolio above it has scrolled entirely out of view.
+   HpIndustries.vue reads this RESOLVED value (getComputedStyle .top) for the
+   scrub start, so CSS stays the single source. All widths — the reveal runs on
+   mobile too; under reduced motion the JS never sizes the runway, so the sticky
+   simply has no travel and stays inert. */
+.industries__sticky { position: sticky; top: var(--nav-h); }
 .industries__row {
   position: relative;
   display: flex;
@@ -961,6 +972,7 @@ main { display: block; }
 
   /* Nav — 16px gutter (logo stays small, no home scale below 768) */
   .nav { padding: 1em; }
+  :root { --nav-h: 4.5em; }  /* 1em padding × 2 + the 2.5em menu row */
 
   /* Hero — one flowing headline; paragraph indented from the left */
   .hero { gap: 13em; padding: 7.5em 1em; }
