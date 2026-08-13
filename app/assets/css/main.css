@@ -334,6 +334,37 @@ main { display: block; }
 .page.is-transitioning .nav,
 .page.is-transitioning .footer { opacity: 0; visibility: hidden; }
 
+/* === LOADER (home hard load; HpLoader.vue) =================
+   The hero portrait opens inside a centred frame that grows in stages until it
+   covers the viewport, then the overlay fades into the identical .hero__bg
+   underneath. Cream ground so the first SSR paint is already the brand page;
+   sits above the nav AND the menu so nothing pokes through while it runs. */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 120;                     /* nav is 10, menu drawer 100 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-cream);
+}
+.loader__frame {
+  width: 16.625em;                  /* 266 × 368 — the opening portrait frame */
+  height: 23em;
+  overflow: hidden;
+  /* Fully clipped from the top: the first paint is just the cream ground, and
+     animating this inset to 0 (HpLoader.vue) wipes the image on bottom-to-top —
+     the cream "cover" sliding off the image. */
+  clip-path: inset(100% 0% 0% 0%);
+}
+.loader__frame picture,
+.loader__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.loader__frame img { object-fit: cover; object-position: center; }
+
 /* === FOOTER =============================================== */
 .footer { position: relative; padding-top: 7.5em; }  /* 120px; positioned for .anno--footer */
 .footer__inner {

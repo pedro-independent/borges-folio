@@ -10,6 +10,19 @@ export default defineNuxtPlugin((nuxtApp) => {
   const { gsap, lazyLoadPlugin } = useGSAP()
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
 
+  // True while the home preloader covers the viewport (HpLoader.vue) — reveals
+  // armed then would fire invisibly under the overlay and the hero would sit
+  // fully revealed when it lifts. `false` everywhere the loader doesn't run.
+  const preloading = useState('preloading', () => false)
+  const preloadDone = () =>
+    preloading.value
+      ? new Promise((resolve) => {
+          const stop = watch(preloading, (v) => {
+            if (!v) { stop(); resolve() }
+          })
+        })
+      : Promise.resolve()
+
   const show = (el) => gsap.set(el, { visibility: 'visible' })
 
   let SplitText = null
@@ -29,6 +42,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     await loadSplit()
     if (!SplitText || reduce.matches) return els.forEach(show)
     await document.fonts.ready
+    // Arm the reveals only once the preloader has released the page, so the
+    // hero lines rise as the overlay fades instead of behind it.
+    await preloadDone()
 
     els.forEach((el) => {
       if (!el.isConnected) return // unmounted while awaiting fonts (fast nav)

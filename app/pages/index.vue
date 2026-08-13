@@ -19,6 +19,9 @@ useSeo({
 
 <template>
   <div>
+    <!-- Hard-load preloader: opens the hero portrait from a strip to full
+         bleed, then fades into the identical hero background below. -->
+    <HpLoader />
     <HpHero :heading="cms.heroHeading" :paragraph="cms.heroParagraph" />
     <HpIntro :text="cms.introText" />
     <!-- Sequential, not coupled: the portfolio scrolls entirely off the top of

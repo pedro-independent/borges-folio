@@ -4,12 +4,17 @@
 //   - .anno__note → GFY Palmer text note (faded/slid in after the strokes)
 // trigger="load" plays on mount (above-the-fold hero); "scroll" plays when the
 // layer scrolls into view. Desktop-only — hidden < 992px in CSS.
-import { onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
+import { onMounted, onBeforeUnmount, useTemplateRef, watch } from 'vue'
 import useGSAP from '~/composables/useGSAP'
 
 const props = defineProps({
   trigger: { type: String, default: 'scroll' }, // 'scroll' | 'load'
 })
+
+// True while the home preloader covers the viewport (HpLoader.vue). A `load`
+// trigger firing then would spend its trace invisibly under the overlay — hold
+// it and play as the overlay fades. `false` everywhere the loader doesn't run.
+const preloading = useState('preloading', () => false)
 
 const root = useTemplateRef('root')
 let mm = null
@@ -33,8 +38,11 @@ onMounted(async () => {
 
   // Large screens, motion allowed → trace the strokes on, then bring the notes in.
   mm.add('(min-width: 992px) and (prefers-reduced-motion: no-preference)', () => {
+    // A load trigger holds (paused) while the preloader covers the viewport,
+    // then restarts — delay included — as the overlay fades.
+    const waiting = props.trigger === 'load' && preloading.value
     const opts = props.trigger === 'load'
-      ? { delay: 0.35 }
+      ? { delay: 0.35, paused: waiting }
       : { scrollTrigger: { trigger: root.value, start: 'top 78%', once: true } }
     const tl = gsap.timeline(opts)
 
@@ -48,7 +56,17 @@ onMounted(async () => {
     gsap.set(notes, { y: 10 })
     tl.to(notes, { opacity: 1, y: 0, duration: 0.45, stagger: 0.18, ease: 'osmo' }, '<0.35')
 
-    return () => { tl.scrollTrigger?.kill(); tl.kill() }
+    let stopWait = null
+    if (waiting) {
+      stopWait = watch(preloading, (v) => {
+        if (v) return
+        stopWait()
+        stopWait = null
+        tl.restart(true) // true = honour the 0.35s delay
+      })
+    }
+
+    return () => { stopWait?.(); tl.scrollTrigger?.kill(); tl.kill() }
   })
 
   // Reduced motion (or no draw plugin) → just reveal everything in place.
