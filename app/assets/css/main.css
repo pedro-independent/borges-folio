@@ -804,17 +804,21 @@ main { display: block; }
    in JS (HpIndustries.vue) to `sticky height + scroll distance`; the gutter +
    max-width come from `.container` on the sticky child. */
 .industries { position: relative; }
-/* Latches at the TOP of the page: the block pins with its border row against
-   the top of the viewport (offset by the nav bar so the row and first items
-   aren't hidden behind it) and the whole ~50em list window sits on screen while
+/* Latches at the TOP of the page: the block pins with its border row near the
+   top of the viewport and the whole ~50em list window sits on screen while
    items rise through it. Pinning at the top is also what guarantees the clean
    handoff — the block's top edge only reaches the top of the screen once the
    portfolio above it has scrolled entirely out of view.
+   The offset clears TWO things stacked above the border row: the fixed nav bar,
+   and the annotation ellipse, which is drawn 5em ABOVE the block's top edge
+   (.anno__svg--ind-ellipse) — latching at the bar alone slid the ellipse's crown
+   under it and clipped the loop. The extra 0.5em keeps a hair of air between the
+   two. Below 992 the marks are hidden, so the tablet block drops the overhang.
    HpIndustries.vue reads this RESOLVED value (getComputedStyle .top) for the
    scrub start, so CSS stays the single source. All widths — the reveal runs on
    mobile too; under reduced motion the JS never sizes the runway, so the sticky
    simply has no travel and stays inert. */
-.industries__sticky { position: sticky; top: var(--nav-h); }
+.industries__sticky { position: sticky; top: calc(var(--nav-h) + 5.5em); }
 .industries__row {
   position: relative;
   display: flex;
@@ -832,7 +836,13 @@ main { display: block; }
   width: 32.5em;                    /* 520px @ base 16px */
   height: 48.125em;                 /* 770px @ base 16px */
   padding: 0 1em;
-  overflow: hidden;                 /* items hard-clip at the window edges */
+  /* Clip the TOP/BOTTOM edges only — items still hard-clip as they rise through
+     the window, but the diagonal entry (HpIndustries.vue slides each word in
+     from the right, up to 45% of the list width) must stay fully readable
+     instead of being sliced at the right edge. `overflow` can't do one axis: a
+     visible axis forces the other to auto, so the clip-path does it — negative
+     insets push the left/right edges of the clip region far outside the box. */
+  clip-path: inset(0 -100vw);
 }
 .industries__track {
   display: flex;
@@ -940,7 +950,9 @@ main { display: block; }
   .portfolio__anno-pin { display: none; }
   .portfolio__anno-pin + .project { margin-top: 0; }
 
-  /* Industries — captions in a row on top, list full-width below */
+  /* Industries — captions in a row on top, list full-width below. The marks are
+     hidden at this tier, so the latch only has to clear the nav bar. */
+  .industries__sticky { top: var(--nav-h); }
   .industries__row { flex-wrap: wrap; gap: 4em 0; padding: 1em 0; }
   .industries__aside { width: 49%; }
   .industries__list { order: 1; width: 100%; }

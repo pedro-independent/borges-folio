@@ -83,8 +83,9 @@ onMounted(() => {
     // the fold. Keying the fan to the window's bottom edge would spend almost
     // all of it off-screen (measured: ~8px of visible travel). Words therefore
     // start their slide as they cross into the bottom ENTRY band of the screen
-    // and are aligned by the top of it. `overflow: hidden` on the list clips the
-    // offset words, so they emerge from its right edge.
+    // and are aligned by the top of it. The list clips top/bottom only (see the
+    // clip-path in main.css), so an offset word stays fully readable while it
+    // travels rather than being sliced at the window's right edge.
     const ENTRY = 0.4 // band height, × viewport height
     const TRAVEL = 0.45 // offset at the band's bottom, × list width
     // Eased so a word decelerates into alignment instead of arriving linearly.
