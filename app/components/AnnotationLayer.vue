@@ -56,6 +56,15 @@ onMounted(async () => {
     if (canDraw) gsap.set(paths, { drawSVG: '100%' })
     gsap.set([...paths, ...notes], { opacity: 1 })
   })
+
+  // Below 992 the layers are hidden in CSS — except the footer note, which the
+  // mobile frame keeps. The pre-paint hide above would leave it at opacity 0
+  // forever, so reveal in place here (the trace is a desktop flourish, and for
+  // the display:none layers this is a no-op either way).
+  mm.add('(max-width: 991px)', () => {
+    if (canDraw) gsap.set(paths, { drawSVG: '100%' })
+    gsap.set([...paths, ...notes], { opacity: 1 })
+  })
 })
 
 onBeforeUnmount(() => mm?.revert())

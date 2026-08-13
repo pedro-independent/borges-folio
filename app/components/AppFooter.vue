@@ -80,6 +80,9 @@ function goLink(to, e) {
   navigate(to)
 }
 
+// Sub-footer dev credit — opens Independent's site in a new tab.
+const DEV_CREDIT = { label: 'Dev by Independent', href: 'https://www.independent.pt/' }
+
 let mm = null
 onMounted(() => {
   const { gsap, ScrollTrigger, lazyLoadPlugin } = useGSAP()
@@ -304,6 +307,21 @@ onBeforeUnmount(() => mm?.revert())
           <span class="footer__arrow-layer footer__arrow-layer--fill"><IconArrowRight /></span>
         </div>
       </a>
+    </div>
+
+    <!-- Sub-footer: legal link + dev credit. Same underline-on-hover as the
+         footer's other text links. The credit renders as a plain span until
+         DEV_CREDIT carries a URL (the archive-row pattern), so it never ships
+         a link pointing nowhere. -->
+    <div class="footer__sub t-base">
+      <a data-underline-link href="/privacy-policy" @click="goLink('/privacy-policy', $event)">Privacy Policy</a>
+      <component
+        :is="DEV_CREDIT.href ? 'a' : 'span'"
+        data-underline-link
+        :href="DEV_CREDIT.href || undefined"
+        :target="DEV_CREDIT.href ? '_blank' : undefined"
+        :rel="DEV_CREDIT.href ? 'noopener' : undefined"
+      >{{ DEV_CREDIT.label }}</component>
     </div>
 
     <!-- Hand-drawn note (Figma 290:14449); [n] counts down the auto-advance -->

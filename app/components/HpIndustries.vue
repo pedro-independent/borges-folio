@@ -41,10 +41,18 @@ let mm = null
 onMounted(() => {
   const { gsap, ScrollTrigger } = useGSAP()
   mm = gsap.matchMedia()
-  // All widths — the reveal runs on mobile too; the CSS latch (.industries__sticky)
-  // is likewise unconditional, so the two stay in lockstep at every tier.
+  // All widths. The diagonal entry below runs at every tier — it's driven purely
+  // by each word's position ON SCREEN, so it doesn't care whether the list is
+  // latched or scrolling past with the page. Only the two pieces that depend on
+  // the CSS latch are gated: from the tablet tier up the block pins and the
+  // track is scrubbed up through a fixed window, while on phones
+  // (.industries__sticky is static, the window grows to fit — see main.css) the
+  // words simply rise with the page and the runway/scrub would be dead height
+  // translating an already-moving list.
   mm.add('(prefers-reduced-motion: no-preference)', () => {
     const list = track.value.parentElement
+    // Width changes force a reload, so this is read once per context.
+    const latches = window.innerWidth >= 480
 
     // Translate until the LAST item's top reaches the TOP of the list window:
     // every other item rises up and out, and the last one comes to rest
@@ -60,7 +68,7 @@ onMounted(() => {
     const sizeRunway = () => {
       runway.value.style.height = sticky.value.offsetHeight + distance() + 'px'
     }
-    sizeRunway()
+    if (latches) sizeRunway()
 
     // Read the CSS sticky `top` (a 50vh-centering calc) RESOLVED to px, so the
     // scrub starts the instant the sticky child latches — CSS is the single
@@ -87,7 +95,14 @@ onMounted(() => {
     // clip-path in main.css), so an offset word stays fully readable while it
     // travels rather than being sliced at the window's right edge.
     const ENTRY = 0.4 // band height, × viewport height
-    const TRAVEL = 0.45 // offset at the band's bottom, × list width
+    // Offset at the band's bottom, × list width. The desktop frame parks the
+    // window between two 16em captions with ~5.7em of slack either side, and the
+    // list no longer clips its sides, so the fan can swing wide — a word starts
+    // most of a window-width out to the right and visibly travels in. Below 992
+    // the list spans the whole row (see main.css), where that same multiplier
+    // would start the words off the side of the screen, so it keeps the original
+    // tighter throw. Width changes force a reload, so this is read once here.
+    const TRAVEL = () => (window.innerWidth >= 992 ? 0.8 : 0.45)
     // Eased so a word decelerates into alignment instead of arriving linearly.
     const ease = gsap.parseEase('power2.in')
 
@@ -103,7 +118,7 @@ onMounted(() => {
       winH = list.offsetHeight
       vh = window.innerHeight
       bandH = vh * ENTRY
-      maxX = list.offsetWidth * TRAVEL
+      maxX = list.offsetWidth * TRAVEL()
     }
     const drawEntry = () => {
       // One rect read for the window's screen position — covers both phases
@@ -111,9 +126,14 @@ onMounted(() => {
       // changes don't invalidate layout, so this stays cheap.
       const listTop = list.getBoundingClientRect().top
       const ty = gsap.getProperty(track.value, 'y') // from GSAP's cache, no layout
-      // Words enter at the fold — or at the window's own bottom edge once that
-      // rises above it (end of the section).
-      const enterY = Math.min(listTop + winH, vh)
+      // Words enter at the fold — or, where the list latches (and so clips at a
+      // fixed window), at the window's own bottom edge once that rises above the
+      // fold at the end of the section. Unlatched the list doesn't clip and its
+      // bottom edge travels with the page, so keying to it would drag the settle
+      // line along with the words themselves: the tail of the list would freeze
+      // part-way through its slide and never straighten up. There the fold is
+      // the only fixed reference, so every word completes its travel.
+      const enterY = latches ? Math.min(listTop + winH, vh) : vh
       const settleY = enterY - bandH
       for (let i = 0; i < items.length; i++) {
         const p = (listTop + tops[i] + ty - settleY) / bandH
@@ -121,22 +141,27 @@ onMounted(() => {
       }
     }
 
-    const tween = gsap.to(track.value, {
-      y: () => -distance(),
-      ease: 'none',
-      onUpdate: drawEntry, // tween frames, so scrub LAG stays in sync too
-      scrollTrigger: {
-        trigger: runway.value,
-        start: () => 'top top+=' + topGap(),
-        end: () => '+=' + distance(),
-        scrub: true,
-        invalidateOnRefresh: true,
-        onRefreshInit: sizeRunway, // re-measure before ScrollTrigger reads positions
-      },
-    })
+    // Latched tiers only: hold the block still and pull the track up through the
+    // window. On phones there's no pin to scroll against — the list rises with
+    // the page instead, and the entry trigger below is the whole animation.
+    const tween = latches
+      ? gsap.to(track.value, {
+          y: () => -distance(),
+          ease: 'none',
+          onUpdate: drawEntry, // tween frames, so scrub LAG stays in sync too
+          scrollTrigger: {
+            trigger: runway.value,
+            start: () => 'top top+=' + topGap(),
+            end: () => '+=' + distance(),
+            scrub: true,
+            invalidateOnRefresh: true,
+            onRefreshInit: sizeRunway, // re-measure before ScrollTrigger reads positions
+          },
+        })
+      : null
     // The scrub only runs once latched, but the words are on screen before that
     // — this spans the whole runway so they also slide while the section is
-    // still scrolling into view.
+    // still scrolling into view. Unlatched (mobile) it drives the fan outright.
     const entry = ScrollTrigger.create({
       trigger: runway.value,
       start: 'top bottom',
@@ -152,7 +177,7 @@ onMounted(() => {
     // The web font can change list metrics after mount — recompute once it's ready.
     if (document.fonts?.ready) document.fonts.ready.then(() => ScrollTrigger.refresh())
     return () => {
-      tween.scrollTrigger?.kill()
+      tween?.scrollTrigger?.kill()
       entry.kill()
       // quickSetter writes bypass matchMedia's revert bookkeeping, so clear the
       // offsets by hand or they'd survive a context revert (e.g. a width change

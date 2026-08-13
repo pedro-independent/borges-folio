@@ -24,8 +24,14 @@ const paragraph = computed(() => props.paragraph || FALLBACK_PARAGRAPH)
 
 <template>
   <section id="top" class="hero" data-theme-section="dark">
+    <!-- Portrait swaps at the mobile tier: the 1440 crop is landscape and loses
+         the face when covering a tall phone viewport, so ≤479 gets its own
+         portrait crop. <picture> so the browser fetches only the one it uses. -->
     <div class="hero__bg" aria-hidden="true">
-      <img src="/img/borges_hero.jpg" alt="" />
+      <picture>
+        <source media="(max-width: 479px)" srcset="/img/hero_mobile.jpg" />
+        <img src="/img/borges_hero.jpg" alt="" />
+      </picture>
     </div>
 
     <h1 class="hero__h1" data-split="heading">

@@ -412,6 +412,20 @@ main { display: block; }
   left: 0;
   clip-path: inset(0 calc((1 - var(--ar-fill)) * 100%) 0 0);
 }
+/* Sub-footer — legal link + dev credit, the last row on the page. Sits 0.5em
+   under the next-page CTA block and keeps 1em of air below itself, so that
+   gap is the page's bottom edge. Side gutters come from .footer's .container. */
+.footer__sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  margin-top: 0.5em;
+  padding-bottom: 1em;
+  font-size: 1em;                   /* 16px */
+  line-height: 1.1;
+}
+
 /* Reduced motion: no auto-fill/redirect — show the CTA at full opacity. */
 @media (prefers-reduced-motion: reduce) {
   .footer__bottom { --wm-fill: 1; --ar-fill: 1; }
@@ -476,6 +490,9 @@ main { display: block; }
   background:
     radial-gradient(120% 90% at 70% 20%, #4a4a4a 0%, #2a2a2a 45%, #161616 100%);
 }
+/* <picture> wraps the img (mobile crop swap, see HpHero.vue) — it's inline by
+   default, so it needs the same full-bleed box for the cover to resolve. */
+.hero__bg picture { display: block; width: 100%; height: 100%; }
 .hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .hero__bg::after {
   content: '';
@@ -644,12 +661,13 @@ main { display: block; }
 
 /* --- Lead/bio: the "Organizing content" legend (AbLegend.vue) ---
    First child of .about__lead, so these offsets are measured from THAT
-   section's top-left. It parks inside the section's 7.5em top padding — the
-   ~3.6em block ends clear of the portrait/copy row, i.e. above every other
-   child — and keeps the container's 1.5em gutter as its left edge. */
+   section's top-left. It sits BELOW the portrait aside, sharing the image's
+   left edge (the container's 1.5em gutter): the aside runs 7.5em padding +
+   14.9375em photo + 0.6875em gap + a two-line caption ≈ 24.9em, so this clears
+   it and reads as a footnote under the image. */
 .anno--ab-legend { top: 0; }
 .anno__note--ab-legend {
-  left: 1.5em; top: 2.5em;
+  left: 1.5em; top: 30.875em;       /* 24 / 494 */
   font-family: var(--font-script);
   color: var(--color-blue);
   display: flex; flex-direction: column; gap: 0.5em; align-items: flex-start;
@@ -713,6 +731,7 @@ main { display: block; }
 .portfolio__rows {
   display: flex;
   flex-direction: column;
+  gap: 1em;
 }
 /* Consecutive cards meet EXACTLY edge to edge — no gap, and no overlap either.
    A negative margin here would start each card already inside the previous one,
@@ -815,9 +834,9 @@ main { display: block; }
    under it and clipped the loop. The extra 0.5em keeps a hair of air between the
    two. Below 992 the marks are hidden, so the tablet block drops the overhang.
    HpIndustries.vue reads this RESOLVED value (getComputedStyle .top) for the
-   scrub start, so CSS stays the single source. All widths — the reveal runs on
-   mobile too; under reduced motion the JS never sizes the runway, so the sticky
-   simply has no travel and stays inert. */
+   scrub start, so CSS stays the single source. ≥480 only (the mobile block drops
+   the latch entirely); under reduced motion the JS never sizes the runway, so
+   the sticky simply has no travel and stays inert. */
 .industries__sticky { position: sticky; top: calc(var(--nav-h) + 5.5em); }
 .industries__row {
   position: relative;
@@ -975,12 +994,25 @@ main { display: block; }
   .project { position: static; top: auto; }
   /* No pile to hold after the last card — drop the containment tail. */
   .portfolio__rows::after { display: none; }
+  .portfolio__rows { gap: 2.5em; }
 
   .container { padding: 0 1em; }            /* 16px gutters */
 
   .t-display-xl { font-size: 6em; }         /* "My portfolio" ~96px (wraps to 2 lines) */
   .t-display-l  { font-size: 4em; }          /* "About me" ~64px */
+
+  /* Industries — no latch on phones: the block scrolls past as plain content,
+     so the window grows to fit every item instead of holding the fixed 48.125em
+     viewport the scrub travels through, and the contact's negative overlap —
+     which exists only to swallow that window once the list has emptied — goes
+     back to normal flow. The words keep their diagonal entry: it's driven by
+     screen position, so HpIndustries.vue runs it here too; only the runway +
+     track scrub, which need the pin, are gated to ≥480. */
+  .industries { padding-bottom: 7.5em; }  /* tail before the contact section */
+  .industries__sticky { position: static; }
+  .industries__list { height: auto; clip-path: none; }
   .industries__list li { font-size: 2.5em; } /* ~40px */
+  .contact { margin-top: 0; padding-bottom: 7.5em; }
 
   /* Nav — 16px gutter (logo stays small, no home scale below 768) */
   .nav { padding: 1em; }
@@ -1003,7 +1035,9 @@ main { display: block; }
   .intro { padding: 15em 1em 7.5em; }
   .intro__box { max-width: 100%; }
 
-  /* Portfolio — full-width cards; centered title that wraps */
+  /* Portfolio — full-width cards; centered title that wraps. Roomier tail than
+     the tablet's 5em now that the cards flow instead of stacking. */
+  .portfolio { padding-bottom: 7.5em; }
   .portfolio__title { text-align: center; white-space: normal; }
   .project__media { width: 100%; height: 16.875em; }   /* 358 × 270 */
   .project__meta { width: 100%; }
@@ -1014,4 +1048,16 @@ main { display: block; }
   .footer__arrow { width: 5.3125em; padding: 0; margin-left: auto; } /* 85, pushed right */
   .footer__arrow-layer { width: 5.3125em; height: 5.3125em; }
   .footer__arrow-layer--fill { top: 0; }
+  /* The footer note is the one mark the mobile frame keeps, so it opts back out
+     of the global `.anno { display: none }` above. Smaller script size, and
+     centred in the gap between the link columns and the "About me" block.
+     NOTE on the offset: `.footer` is also a `.container`, and the mobile
+     `.container { padding: 0 1em }` shorthand above lands LATER in the cascade
+     than `.footer { padding-top: 7.5em }`, so the footer starts flush at 0 here.
+     The 4-line nav column ends at ~4.4em and .footer__inner's 5em gap runs to
+     ~9.4em, so this sits mid-gap. AnnotationLayer.vue reveals notes below 992
+     for this reason. */
+  .anno--footer { display: block; }
+  .anno__note--ft-wait { left: 12.25em; top: 6em; }
+  .anno__note--ft-wait p { font-size: 0.8em; }   /* ~13px */
 }
