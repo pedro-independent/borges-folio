@@ -58,7 +58,14 @@ export const CONTACT_PAGE = groq`*[_type == "contactPage"][0]{
 }`
 
 // --- Projects -------------------------------------------------------------
-export const ALL_PROJECT_CARDS = groq`*[_type == "project"] | order(sortOrder asc, title asc){ ${CARD} }`
+// Case-study cards for the footer's "Next up" rotation: the workPage doc's
+// curated featured + grid lists, in that order. These are the projects with a
+// case study to land on — the by-year archive list (archiveProjects) is
+// deliberately absent, and a bare *[_type == "project"] sweep would include it.
+// (`year` can NOT discriminate: real data fills it on case studies too.)
+export const NEXT_UP_CARDS = groq`*[_type == "workPage"][0]{
+  "cards": coalesce(featuredProjects[]->{ ${CARD} }, []) + coalesce(gridProjects[]->{ ${CARD} }, [])
+}`
 
 export const PROJECT_BY_SLUG = groq`*[_type == "project" && slug.current == $slug][0]{
   title, subtitle, category, description, awards, tint, liveUrl,

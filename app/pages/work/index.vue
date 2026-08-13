@@ -53,7 +53,10 @@ const toCard = (c) => ({
   title: c.title, desc: c.subtitle, awards: c.awards, slug: c.slug,
   tint: c.tint, cover: c.cover, comingSoon: c.comingSoon, liveUrl: c.liveUrl,
 })
-// Group the flat archive list (already ordered by year desc) into year sections.
+// Group the flat archive list into year sections, newest year first. The list
+// is a curated reference array in the Studio, so its order is whatever the
+// client dragged — the year order must be imposed here, not trusted. Item
+// order WITHIN a year stays as curated.
 const groupByYear = (list) => {
   const order = []
   const byYear = {}
@@ -62,6 +65,7 @@ const groupByYear = (list) => {
     if (!byYear[y]) { byYear[y] = []; order.push(y) }
     byYear[y].push(toCard(c))
   }
+  order.sort((a, b) => Number(b) - Number(a))
   return order.map((year) => ({ year, items: byYear[year] }))
 }
 

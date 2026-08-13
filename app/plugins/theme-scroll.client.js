@@ -92,4 +92,13 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   nuxtApp.hook('app:mounted', reinit)
   nuxtApp.hook('page:transition:done', reinitNow)
+
+  // Leaving the 404 (clearError → redirect) is neither a page transition nor a
+  // fresh app mount, so neither hook above fires — the scan would keep reading
+  // the sections of the page the user errored OUT of (now detached, so the nav
+  // theme freezes on its pre-error value). Re-arm once the redirect's page has
+  // rendered; reinit's rAF then measures the settled layout.
+  nuxtApp.hook('app:error:cleared', () => {
+    nuxtApp.hooks.hookOnce('page:finish', reinit)
+  })
 })

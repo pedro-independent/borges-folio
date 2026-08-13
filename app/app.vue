@@ -63,7 +63,13 @@ let frozenScrollY = 0
 // scales down WITH the page instead of vanishing.
 let footerClone = null
 if (import.meta.client) {
+  const error = useError()
+
   useRouter().beforeEach((to, from) => {
+    // Never arm the transition while the error page is up (or being cleared):
+    // clearError's redirect remounts NuxtPage from scratch, so the enter hook
+    // that would reset the flag never runs and the shell would stay hidden.
+    if (error.value) return
     frozenScrollY = window.scrollY
     // Flag the transition NOW — before the outgoing page unmounts — so its
     // sections can skip their own matchMedia teardown. Otherwise a section like
@@ -105,6 +111,22 @@ if (import.meta.client) {
       transitioning.value = true
     }
   })
+
+  // A navigation that ERRORS (unknown route, a page throwing a fatal 404)
+  // never reaches the leave/enter hooks below — Nuxt swaps the page tree for
+  // error.vue instead — so the state armed in beforeEach must be rolled back
+  // here or it leaks: the footer clone floats over the 404 canvas, and the
+  // stuck flag keeps the shell hidden (and section rebuilds deferred) forever
+  // after clearError. flush:'sync' so the flag is already false when the
+  // outgoing page unmounts — its sections then run their ordinary matchMedia
+  // teardown instead of the transition-freeze skip.
+  watch(error, (err) => {
+    if (!err) return
+    if (footerClone?.parentElement) footerClone.remove()
+    footerClone = null
+    transitioning.value = false
+    document.body.style.backgroundColor = ''
+  }, { flush: 'sync' })
 }
 
 function hideNav() {

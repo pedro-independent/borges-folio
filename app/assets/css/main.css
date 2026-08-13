@@ -289,22 +289,22 @@ main { display: block; }
    Reverses in the right order on mouse-out via the staggered delays.
    (0.25em dot + 0.375em gap = 0.625em to centre; 0.25em × 5 = 1.25em.) */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .nav__menu:is(:hover, :focus-visible) .icon-dots span:first-child {
+  .nav__menu:is(:hover, :focus-visible, .is-hovered) .icon-dots span:first-child {
     transform: translateX(0.625em);
   }
-  .nav__menu:is(:hover, :focus-visible) .icon-dots span:last-child {
+  .nav__menu:is(:hover, :focus-visible, .is-hovered) .icon-dots span:last-child {
     transform: translateX(-0.625em);
   }
-  .nav__menu:is(:hover, :focus-visible) .icon-dots {
+  .nav__menu:is(:hover, :focus-visible, .is-hovered) .icon-dots {
     transform: scale(5);              /* stage 2: grow */
     transition-delay: 0.3s;
   }
-  .nav__menu:is(:hover, :focus-visible) .icon-dots span {
+  .nav__menu:is(:hover, :focus-visible, .is-hovered) .icon-dots span {
     border-radius: 50%;              /* stage 3: round */
     transition-delay: 0s, 0.3s;      /* merge now, round after the grow */
   }
   /* the blue circle shrinks 2.5em → 2em to accent the motion */
-  .nav__menu:is(:hover, :focus-visible) .nav__menu-toggle {
+  .nav__menu:is(:hover, :focus-visible, .is-hovered) .nav__menu-toggle {
     transform: scale(0.8);
   }
 }
@@ -387,15 +387,14 @@ main { display: block; }
   width: 16.125em;                  /* 258px */
   padding: 2em 0;                   /* 32px */
 }
+/* No placeholder background — the frame shows the thumbnail or nothing (the
+   cream page ground), never a flat colour block. */
 .footer__photo-frame {
   height: 9.125em;                  /* 146px */
   border-radius: 0.25em;
   overflow: hidden;
-  background:
-    linear-gradient(135deg, #c9c4ba 0%, #b6b1a6 100%); /* fallback while the image loads */
 }
 .footer__photo-frame img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
-.footer__photo-tint { width: 100%; height: 100%; } /* "Next up" project cover placeholder (tint) */
 .footer__arrow {
   position: relative;
   flex-shrink: 0;
