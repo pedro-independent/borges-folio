@@ -6,45 +6,6 @@
 export default defineNuxtPlugin(async (nuxtApp) => {
   const { gsap, lazyLoadPlugin } = useGSAP()
 
-  // --- Hover latch -----------------------------------------------------------
-  // The flip/wipe/dots choreographies are staggered CSS transitions; a pointer
-  // that crossed a button faster than the stagger window either cancelled the
-  // delayed tweens before they started (the animation never visibly played) or
-  // re-applied the per-char delays to characters frozen mid-flight on re-entry
-  // (torn half-states). So the CSS triggers on `.is-hovered` (alongside :hover)
-  // and JS latches it here: added on pointerover, released on pointerout only
-  // once the IN choreography has had time to land — a fast pass plays in full,
-  // and the reversal always starts from a settled state. Delegated, so labels
-  // re-rendered by CMS swaps stay covered. Fine-pointer devices only (the CSS
-  // effects are gated the same way), and registered before the SplitText load
-  // below so the 029 wipe keeps the latch even when the club plugin is absent.
-  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    const SEL = '[data-button-004], [data-button-029]'
-    const state = new WeakMap()
-    document.addEventListener('pointerover', (e) => {
-      const el = e.target.closest?.(SEL)
-      if (!el || el.contains(e.relatedTarget)) return
-      const s = state.get(el) || {}
-      clearTimeout(s.timer)
-      s.enteredAt = performance.now()
-      state.set(el, s)
-      el.classList.add('is-hovered')
-    })
-    document.addEventListener('pointerout', (e) => {
-      const el = e.target.closest?.(SEL)
-      if (!el || el.contains(e.relatedTarget)) return
-      const s = state.get(el)
-      if (!s) return
-      // Hold until the in-choreography lands: max stagger delay + travel ≈
-      // 0.55s for the flip/wipe. `data-hover-latch` overrides for longer
-      // choreographies (the nav dots' three stages run 0.9s).
-      const minPlay = Number(el.dataset.hoverLatch) || 600
-      const wait = Math.max(0, minPlay - (performance.now() - s.enteredAt))
-      clearTimeout(s.timer)
-      s.timer = setTimeout(() => el.classList.remove('is-hovered'), wait)
-    })
-  }
-
   let SplitText
   try {
     SplitText = await lazyLoadPlugin('SplitText')

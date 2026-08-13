@@ -48,9 +48,7 @@
     will-change: transform, translate, rotate, opacity;
   }
 
-  /* `.is-hovered` mirrors :hover with a JS latch (buttons.client.js) so fast
-     pointer passes still play the full choreography before reversing. */
-  .button-004:is(:hover, :focus-visible, .is-hovered) .button-004__text.is--default .button-004__split-char,
+  .button-004:is(:hover, :focus-visible) .button-004__text.is--default .button-004__split-char,
   [data-hover]:is(:hover, :focus-visible) .button-004 .button-004__text.is--default .button-004__split-char {
     translate: calc(var(--signed-index) * 0.125em) calc(var(--button-004-translate-y) * -1) 0;
     rotate: 1 0 0 72deg;
@@ -59,7 +57,7 @@
     transition: transform 0.35s var(--delay) var(--button-004-ease-hover), translate 0.35s var(--delay) var(--button-004-ease-hover), rotate 0.35s var(--delay) var(--button-004-ease-hover), opacity 0.15s calc(var(--delay) + 0.1s) ease-out;
   }
 
-  .button-004:is(:hover, :focus-visible, .is-hovered) .button-004__text.is--hover .button-004__split-char,
+  .button-004:is(:hover, :focus-visible) .button-004__text.is--hover .button-004__split-char,
   [data-hover]:is(:hover, :focus-visible) .button-004 .button-004__text.is--hover .button-004__split-char {
     translate: 0 0 0;
     rotate: 1 0 0 0deg;

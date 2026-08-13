@@ -100,7 +100,6 @@ onBeforeUnmount(teardown)
         aria-haspopup="dialog"
         :aria-expanded="menuOpen"
         data-button-004
-        data-hover-latch="900"
         @click="menuOpen = true"
       >
         <span class="nav__menu-label">
