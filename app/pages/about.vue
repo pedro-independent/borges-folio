@@ -243,6 +243,39 @@ onMounted(() => {
       indexImg = (indexImg + 1) % AWARD_CERTIFICATES.length
     }
 
+    // Spawn one certificate for a cursor at viewport (valX, valY) travelling
+    // (dX, dY) — in either zone. Shared by the pointer and the scroll path.
+    function spawnAt(valX, valY, dX, dY, overList) {
+      const bounds = root.getBoundingClientRect()
+      const col = root.querySelector('.about__cv-col')
+      // Right-most point a certificate may ever reach (spawn OR drift):
+      // one image-width short of the column, covering the xPercent scatter.
+      const maxEndX = col ? col.getBoundingClientRect().left - bounds.left - imgW : Infinity
+      let x = valX - bounds.left
+      if (overList) x -= offsetX
+      else x = Math.min(x, maxEndX)
+      // A hard rightward flick drifts +dX×4 — cap it at the column edge.
+      if (x + dX * 4 > maxEndX) dX = (maxEndX - x) / 4
+      // Same vertically: the section clips the trail (overflow: hidden),
+      // so keep spawn AND drift inside it — 0.7×imgH covers the yPercent
+      // scatter and the 1.3 elastic pop, so a certificate is never cut
+      // by the section's top or bottom edge.
+      const minY = imgH * 0.75
+      const maxY = bounds.height - imgH * 0.75
+      let y = Math.max(minY, Math.min(valY - bounds.top, maxY))
+      if (y + dY * 4 > maxY) dY = (maxY - y) / 4
+      if (y + dY * 4 < minY) dY = (minY - y) / 4
+      createMedia(x, y, dX, dY)
+    }
+
+    // Zones: the awards list, or the open space anywhere left of the CV
+    // column (the column itself swallows the rest of the section).
+    const zoneOf = (el) => {
+      if (!el || !root.contains(el)) return null
+      if (el.closest('[data-award-list]')) return 'list'
+      return el.closest('.about__cv-col') ? null : 'open'
+    }
+
     // Integration seams vs the original: coords are tracked across the whole
     // CV section (so deltas stay continuous around the list), but distance only
     // accumulates — and images only spawn — over the Awards list itself. The
@@ -266,39 +299,14 @@ onMounted(() => {
         return
       }
 
-      // Zones: the awards list, or the open space anywhere left of the CV
-      // column (target = the section itself — the column swallows the rest).
-      const overList = !!e.target.closest('[data-award-list]')
-      const overOpen = !overList && !e.target.closest('.about__cv-col')
-
-      if (overList || overOpen) {
+      const zone = zoneOf(e.target)
+      if (zone) {
         // Add the distance traveled on x + y
         incr += Math.abs(valX - oldIncrX) + Math.abs(valY - oldIncrY)
 
         if (incr > resetDist) {
           incr = 0 // Reset the variable incr
-          const bounds = root.getBoundingClientRect()
-          const col = root.querySelector('.about__cv-col')
-          // Right-most point a certificate may ever reach (spawn OR drift):
-          // one image-width short of the column, covering the xPercent scatter.
-          const maxEndX = col ? col.getBoundingClientRect().left - bounds.left - imgW : Infinity
-          let x = valX - bounds.left
-          let dX = valX - oldIncrX
-          if (overList) x -= offsetX
-          else x = Math.min(x, maxEndX)
-          // A hard rightward flick drifts +dX×4 — cap it at the column edge.
-          if (x + dX * 4 > maxEndX) dX = (maxEndX - x) / 4
-          // Same vertically: the section clips the trail (overflow: hidden),
-          // so keep spawn AND drift inside it — 0.7×imgH covers the yPercent
-          // scatter and the 1.3 elastic pop, so a certificate is never cut
-          // by the section's top or bottom edge.
-          const minY = imgH * 0.75
-          const maxY = bounds.height - imgH * 0.75
-          let y = Math.max(minY, Math.min(valY - bounds.top, maxY))
-          let dY = valY - oldIncrY
-          if (y + dY * 4 > maxY) dY = (maxY - y) / 4
-          if (y + dY * 4 < minY) dY = (minY - y) / 4
-          createMedia(x, y, dX, dY)
+          spawnAt(valX, valY, valX - oldIncrX, valY - oldIncrY, zone === 'list')
         }
       }
 
@@ -307,11 +315,37 @@ onMounted(() => {
       oldIncrY = valY
     }
 
+    // Scrolling with a still cursor moves the section under it, which is the
+    // same relative travel as moving the mouse — so it feeds the same counter.
+    // The cursor keeps its viewport position; only the element beneath it
+    // changes, hence elementFromPoint instead of an event target. Drift is
+    // vertical only: scrolling down by S lifts the section, so relative to it
+    // the cursor descends by S.
+    let lastScroll = window.scrollY
+    const onScroll = () => {
+      const scroll = window.scrollY
+      const delta = scroll - lastScroll
+      lastScroll = scroll
+      // No pointer seen yet (page loaded scrolled, mouse never moved).
+      if (!started || !delta) return
+
+      const zone = zoneOf(document.elementFromPoint(oldIncrX, oldIncrY))
+      if (!zone) return
+
+      incr += Math.abs(delta)
+      if (incr > resetDist) {
+        incr = 0
+        spawnAt(oldIncrX, oldIncrY, 0, delta, zone === 'list')
+      }
+    }
+
     root.addEventListener('mouseenter', onEnter)
     root.addEventListener('mousemove', onMove)
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       root.removeEventListener('mouseenter', onEnter)
       root.removeEventListener('mousemove', onMove)
+      window.removeEventListener('scroll', onScroll)
       live.forEach(({ tl, image }) => {
         tl?.kill()
         image.remove()
