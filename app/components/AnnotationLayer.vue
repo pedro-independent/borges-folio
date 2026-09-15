@@ -15,6 +15,17 @@ const props = defineProps({
 // trigger firing then would spend its trace invisibly under the overlay — hold
 // it and play as the overlay fades. `false` everywhere the loader doesn't run.
 const preloading = useState('preloading', () => false)
+// True while a page transition runs (app.vue). On client-side navigation the
+// layer mounts while the incoming page is still sliding in, and the heading
+// lines it annotates only reveal once the transition settles (their
+// ScrollTriggers are recomputed then) — so a `load` trigger must hold here
+// too, or the scribbles trace over an empty hero.
+const transitioning = useState('page-transitioning', () => false)
+
+// Delay after release. After a page transition the heading lines rise first
+// (~0.9s + stagger, text-reveal.client.js); the strokes wait for them.
+const LOAD_DELAY = 0.35
+const AFTER_TRANSITION_DELAY = 1.1
 
 const root = useTemplateRef('root')
 let mm = null
@@ -40,9 +51,9 @@ onMounted(async () => {
   mm.add('(min-width: 992px) and (prefers-reduced-motion: no-preference)', () => {
     // A load trigger holds (paused) while the preloader covers the viewport,
     // then restarts — delay included — as the overlay fades.
-    const waiting = props.trigger === 'load' && preloading.value
+    const waiting = props.trigger === 'load' && (preloading.value || transitioning.value)
     const opts = props.trigger === 'load'
-      ? { delay: 0.35, paused: waiting }
+      ? { delay: LOAD_DELAY, paused: waiting }
       : { scrollTrigger: { trigger: root.value, start: 'top 78%', once: true } }
     const tl = gsap.timeline(opts)
 
@@ -58,11 +69,13 @@ onMounted(async () => {
 
     let stopWait = null
     if (waiting) {
-      stopWait = watch(preloading, (v) => {
-        if (v) return
+      const afterTransition = transitioning.value
+      stopWait = watch([preloading, transitioning], ([p, t]) => {
+        if (p || t) return
         stopWait()
         stopWait = null
-        tl.restart(true) // true = honour the 0.35s delay
+        tl.delay(afterTransition ? AFTER_TRANSITION_DELAY : LOAD_DELAY)
+        tl.restart(true) // true = honour the delay
       })
     }
 
