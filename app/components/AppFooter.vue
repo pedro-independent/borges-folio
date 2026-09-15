@@ -31,9 +31,7 @@ const projectSlug = computed(() => {
 // "Next up" resolves against the workPage doc's curated featured + grid cards
 // (NEXT_UP_CARDS) — the projects with a case study to land on. The by-year
 // archive list never enters the pool, and coming-soon cards are dropped (no
-// page yet). The rotation walks forward from the current project and also SKIPS
-// coverless cards: the frame must always paint a real thumbnail, so a card
-// whose cover isn't uploaded yet simply sits out until it is. Same shell
+// page yet). The rotation walks forward from the current project. Same shell
 // pattern as useSiteSettings: not awaited so the footer never suspends the
 // page transition; if the CMS is unreachable (or the slug isn't in the pool)
 // the static utils/projects order takes over.
@@ -48,12 +46,7 @@ const nextProject = computed(() => {
     return true
   })
   const i = cards.findIndex((c) => c.slug === projectSlug.value)
-  if (i !== -1 && cards.length > 1) {
-    for (let step = 1; step < cards.length; step++) {
-      const candidate = cards[(i + step) % cards.length]
-      if (candidate.cover) return candidate
-    }
-  }
+  if (i !== -1 && cards.length > 1) return cards[(i + 1) % cards.length]
   return getNextProject(projectSlug.value)
 })
 
@@ -61,14 +54,6 @@ const ctaLabel = computed(() => (nextProject.value ? 'Next up' : isAbout.value ?
 const ctaTarget = computed(() =>
   nextProject.value ? `/work/${nextProject.value.slug}` : isAbout.value ? '/work' : '/about',
 )
-// Photo frame on project pages: the next project's cover (CDN-resized — the
-// frame paints at ~258px, so 640 covers 2× screens). Static fallback entries
-// carry a hex in `cover`, which isn't a URL — those (and coverless CMS cards)
-// show nothing: a real thumbnail or an empty frame, never a flat colour block.
-const photoCover = computed(() => {
-  const c = nextProject.value?.cover
-  return c && !c.startsWith('#') ? `${c}?w=640&fit=max&auto=format` : null
-})
 // Page-transition state from app.vue — the entrance trigger must not be created
 // mid-transition (see the note where it's built below).
 const transitioning = useState('page-transitioning', () => false)
@@ -306,13 +291,9 @@ onBeforeUnmount(() => mm?.revert())
         </div>
 
         <div class="footer__photo">
-          <!-- Project pages: next project's cover, or an empty frame while the
-               card has no cover uploaded (a portrait would read wrong under
-               "Next up", and a flat colour block reads as a bug). Elsewhere:
-               the portrait. -->
+          <!-- Always the portrait — on project pages too, under "Next up". -->
           <div class="footer__photo-frame">
-            <img v-if="photoCover" :src="photoCover" :alt="`${nextProject.title} — cover`" />
-            <img v-else-if="!nextProject" src="/img/borges_hero.jpg" alt="Pedro Borges" />
+            <img src="/img/borges_hero.jpg" alt="Pedro Borges" />
           </div>
         </div>
 
