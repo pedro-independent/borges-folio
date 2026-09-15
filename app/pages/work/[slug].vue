@@ -14,10 +14,14 @@ import { PROJECT_BY_SLUG } from '~/utils/sanityQueries'
 const route = useRoute()
 const slug = route.params.slug
 
-// Block on the server (SSR ships real data) but NOT on client-side navigation,
-// so the page transition isn't suspended waiting on the fetch.
-const { data } = await useSanityQuery(`project:${slug}`, PROJECT_BY_SLUG, { slug }, { lazy: import.meta.client })
 const local = getProject(slug)
+
+// Block on the server (SSR ships real data) but NOT on client-side navigation,
+// so the page transition isn't suspended waiting on the fetch — *unless* the
+// slug has no local mirror (a CMS-only project). Then `data` would still be
+// null at setup and the 404 guard below would fire before the CMS answered,
+// so for those we block on the client too.
+const { data } = await useSanityQuery(`project:${slug}`, PROJECT_BY_SLUG, { slug }, { lazy: import.meta.client && !!local })
 
 // Field-wise merge: prefer CMS, fall back to the local mirror per field — a
 // partially filled CMS doc (e.g. seeded card-only) still renders a full page.
