@@ -258,7 +258,7 @@ function onLeave(el, done) {
   flex-direction: column;
   gap: 0.125em;                    /* 2px */
   margin: 0;
-  font-size: 0.6875em;             /* 11px */
+  font-size: var(--text-xs);       /* 12px */
   line-height: 1.2;
 }
 .menu__time { color: var(--color-blue); }

@@ -10,6 +10,7 @@ export default defineType({
   title: 'Work',
   groups: [
     { name: 'content', title: 'Content', default: true },
+    { name: 'footer', title: 'Footer' },
     { name: 'seo', title: 'SEO' },
   ],
   fields: [
@@ -39,6 +40,13 @@ export default defineType({
       description:
         'The year-grouped list below the grid. These are older/archived projects — rows are grouped by each project’s "Year" and link out to the project’s "Live website URL" (new tab) rather than an internal case-study page.',
       of: [{ type: 'reference', to: [{ type: 'project' }] }],
+    }),
+    defineField({
+      name: 'footerImage',
+      type: 'footerImage',
+      title: 'Footer image',
+      group: 'footer',
+      description: 'Shown in the footer on this page. Leave empty to use the default from General site settings.',
     }),
     defineField({ name: 'seo', type: 'seo', title: 'SEO', group: 'seo' }),
   ],

@@ -3,7 +3,7 @@
 // The Studio conventions (see studio/schemaTypes/documents/project.js):
 //   h2  = "Section label" — starts a new labelled row; the text becomes the small
 //         left-column label and every block after it flows in the right column.
-//   h3  = "Heading" (24px statement), h4 = "Small label" (11px field name).
+//   h3  = "Heading" (24px statement), h4 = "Small label" (12px field name).
 //   image blocks may be marked `half`; consecutive halves pair side by side.
 //   stats = a row of label-over-value columns (outcome numbers, team list).
 

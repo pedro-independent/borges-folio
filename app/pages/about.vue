@@ -480,7 +480,7 @@ useSeo({
   display: flex;
   align-items: center;
   gap: 0.5em;
-  font-size: 0.6875em;             /* 11 */
+  font-size: var(--text-xs);       /* 12 */
   line-height: 1.3;
 }
 .about__aside-arrow { flex-shrink: 0; width: 3.25em; height: 1.125em; } /* 52 × 18 */
@@ -572,7 +572,7 @@ useSeo({
   flex-shrink: 0;
   white-space: nowrap;
   text-align: right;
-  font-size: 0.6875em;             /* 11 */
+  font-size: var(--text-xs);       /* 12 */
   opacity: 0.6;
 }
 

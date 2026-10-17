@@ -67,6 +67,17 @@ export const NEXT_UP_CARDS = groq`*[_type == "workPage"][0]{
   "cards": coalesce(featuredProjects[]->{ ${CARD} }, []) + coalesce(gridProjects[]->{ ${CARD} }, [])
 }`
 
+// Footer photo per static page (Home / About / Work), plus the site-settings
+// default used on case-study pages and wherever a page's own field is empty.
+// One request for all of them; AppFooter picks by route.
+const FOOTER_IMG = groq`footerImage{ "url": asset->url, alt }`
+export const FOOTER_IMAGES = groq`{
+  "default": *[_type == "siteSettings"][0].${FOOTER_IMG},
+  "home": *[_type == "homePage"][0].${FOOTER_IMG},
+  "about": *[_type == "aboutPage"][0].${FOOTER_IMG},
+  "work": *[_type == "workPage"][0].${FOOTER_IMG}
+}`
+
 export const PROJECT_BY_SLUG = groq`*[_type == "project" && slug.current == $slug][0]{
   title, subtitle, category, description, awards, tint, liveUrl,
   "cover": cover.asset->url,

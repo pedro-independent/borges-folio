@@ -12,6 +12,7 @@ export default defineType({
     { name: 'intro', title: 'Intro & bio', default: true },
     { name: 'quote', title: 'Quote' },
     { name: 'cv', title: 'CV' },
+    { name: 'footer', title: 'Footer' },
     { name: 'seo', title: 'SEO' },
   ],
   fields: [
@@ -77,6 +78,13 @@ export default defineType({
       ],
     }),
 
+    defineField({
+      name: 'footerImage',
+      type: 'footerImage',
+      title: 'Footer image',
+      group: 'footer',
+      description: 'Shown in the footer on this page. Leave empty to use the default from General site settings.',
+    }),
     defineField({ name: 'seo', type: 'seo', title: 'SEO', group: 'seo' }),
   ],
   preview: { prepare: () => ({ title: 'About' }) },

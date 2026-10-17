@@ -189,12 +189,12 @@ const ptComponents = {
    change layout shape. Everything inside .case__col is rendered by PortableText
    (a child component), so those rules go through :deep(). */
 
-.case__label { font-size: 0.6875em; line-height: 1.1; } /* 11 */
+.case__label { font-size: var(--text-xs); line-height: 1.1; } /* 12 */
 
 /* Award badge (matches the work page badge) */
 .case__badge {
   flex-shrink: 0;
-  font-size: 0.6875em;              /* 11 */
+  font-size: var(--text-xs);        /* 12 */
   line-height: 1;
   padding: 0.4em 0.73em 0.5em;
   border-radius: 0.73em;
@@ -218,9 +218,9 @@ const ptComponents = {
 .case__hero-titlerow { display: flex; flex-direction: column; gap: 0.5em; } /* 8 */
 .case__hero-title { font-size: 2.5em; line-height: 1.1; } /* 40 */
 .case__hero-meta { display: flex; align-items: center; justify-content: space-between; gap: 1em; }
-.case__hero-cat { font-size: 0.6875em; } /* 11 */
+.case__hero-cat { font-size: var(--text-xs); } /* 12 */
 .case__hero-links { display: flex; align-items: center; gap: 1.5em; }
-.case__hero-live { font-size: 0.6875em; text-decoration: underline; text-underline-offset: 0.2em; } /* 11 */
+.case__hero-live { font-size: var(--text-xs); text-decoration: underline; text-underline-offset: 0.2em; } /* 12 */
 .case__hero-live:hover { color: var(--color-blue); }
 .case__hero-desc { font-size: 1em; line-height: 1.3; opacity: 0.4; } /* 16 */
 .case__services {
@@ -253,7 +253,9 @@ const ptComponents = {
 /* Body rows */
 .case__body { padding-block: 5em; display: flex; flex-direction: column; gap: 5em; } /* 80 / 80 */
 .case__row { display: flex; align-items: flex-start; gap: 0.25em; padding-inline: 5.4375em; } /* px-111 */
-.case__row-label { flex: 1 0 0; min-width: 0; padding-block: 1em; } /* 16 */
+/* Sticky under the fixed nav while its column scrolls past; the row is the
+   containing block, so the label releases when the row's content ends. */
+.case__row-label { flex: 1 0 0; min-width: 0; padding-block: 1em; position: sticky; top: var(--nav-h); } /* 16 */
 .case__col {
   flex: 0 0 32.4375em;             /* 519 */
   max-width: 32.4375em;
@@ -266,7 +268,7 @@ const ptComponents = {
 
 /* --- Rich text content (rendered by PortableText) --- */
 .case__col :deep(.case__h) { font-size: 1.5em; line-height: 1.2; }               /* 24 — headings/statements */
-.case__col :deep(.case__sub) { font-size: 0.6875em; line-height: 1.1; }          /* 11 — small field label */
+.case__col :deep(.case__sub) { font-size: var(--text-xs); line-height: 1.1; }          /* 12 — small field label */
 .case__col :deep(.case__p) { font-size: 1em; line-height: 1.4; opacity: 0.6; }  /* 16 — body copy */
 /* A small label binds tightly to what it introduces (8px, not the 32px flow gap). */
 .case__col :deep(.case__sub + .case__p) { margin-top: -1.5em; }
@@ -303,7 +305,7 @@ const ptComponents = {
   .case__problem-statement { font-size: 2em; } /* 32 */
 
   .case__row { flex-direction: column; gap: 1em; padding-inline: 0; }
-  .case__row-label { flex: none; padding-block: 0; }
+  .case__row-label { flex: none; padding-block: 0; position: static; }
   .case__col { flex: none; width: 100%; max-width: none; border-top: 0; }
   .case__row-label .case__label { display: block; padding-bottom: 1em; border-bottom: 1px solid var(--color-line); }
 }

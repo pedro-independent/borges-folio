@@ -272,7 +272,7 @@ a.work__card:hover .work__card-title { color: var(--color-blue); } /* linked car
 .work__badges { display: flex; align-items: flex-start; gap: 0.5em; flex-shrink: 0; } /* 8 */
 .work__badge {
   flex-shrink: 0;
-  font-size: 0.6875em;              /* 11 */
+  font-size: var(--text-xs);        /* 12 */
   line-height: 1;
   padding: 0.4em 0.73em 0.5em;      /* ~4/8/5 */
   border-radius: 0.73em;            /* 8 */

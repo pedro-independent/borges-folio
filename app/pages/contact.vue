@@ -425,7 +425,7 @@ onBeforeUnmount(() => clearInterval(clock))
   margin: 0;
   min-width: 0;
 }
-.field__label { font-size: 0.6875em; line-height: 1.2; padding: 0; } /* 11 */
+.field__label { font-size: var(--text-xs); line-height: 1.2; padding: 0; } /* 12 */
 
 .field__control {
   width: 100%;
@@ -515,7 +515,7 @@ onBeforeUnmount(() => clearInterval(clock))
    fill is the affordance (see button-004.css / button-029.css). The in-flight
    state is the one exception: dim it so the disabled button reads as busy. */
 .contact-page__send:disabled { opacity: 0.5; }
-.contact-page__required { font-size: 0.6875em; line-height: 1.2; text-align: center; } /* 11 */
+.contact-page__required { font-size: var(--text-xs); line-height: 1.2; text-align: center; } /* 12 */
 /* Submission feedback replaces the required-fields note in the same slot, so the
    button never shifts. Errors take the accent blue (the palette has no red). */
 .contact-page__status { opacity: 0.6; }
@@ -592,7 +592,7 @@ onBeforeUnmount(() => clearInterval(clock))
   gap: 0.5em;                       /* 8 */
   text-align: right;
 }
-.contact-page__email-label { font-size: 0.6875em; line-height: 1.2; } /* 11 */
+.contact-page__email-label { font-size: var(--text-xs); line-height: 1.2; } /* 12 */
 .contact-page__email-link { font-size: 1em; line-height: 1.2; transition: color 0.25s ease; } /* 16 */
 .contact-page__email-link:hover { color: var(--color-blue); }
 
@@ -609,7 +609,7 @@ onBeforeUnmount(() => clearInterval(clock))
   display: flex;
   flex-direction: column;
   gap: 0.125em;                     /* 2 */
-  font-size: 0.6875em;              /* 11 */
+  font-size: var(--text-xs);        /* 12 */
   line-height: 1.2;
 }
 .contact-page__time { color: var(--color-blue); }

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 
-import { NEXT_UP_CARDS } from '~/utils/sanityQueries'
+import { FOOTER_IMAGES, NEXT_UP_CARDS } from '~/utils/sanityQueries'
 
 // Socials + nav from siteSettings (shared, non-blocking; falls back to the
 // hardcoded set until the fetch lands).
@@ -48,6 +48,19 @@ const nextProject = computed(() => {
   const i = cards.findIndex((c) => c.slug === projectSlug.value)
   if (i !== -1 && cards.length > 1) return cards[(i + 1) % cards.length]
   return getNextProject(projectSlug.value)
+})
+
+// Footer photo: each static page sets its own in Sanity (Home / About / Work →
+// Footer); case-study pages and empty fields use the site-settings default,
+// then the bundled portrait. Not awaited, same as the queries above.
+const FOOTER_IMAGE_KEYS = { '/': 'home', '/about': 'about', '/work': 'work' }
+const FALLBACK_PHOTO = { url: '/img/borges_hero.jpg', alt: 'Pedro Borges' }
+const { data: footerImages } = useSanityQuery('footerImages', FOOTER_IMAGES, {}, { lazy: import.meta.client })
+const footerPhoto = computed(() => {
+  const imgs = footerImages.value || {}
+  const own = imgs[FOOTER_IMAGE_KEYS[route.path.replace(/(.)\/$/, '$1')]]
+  const pick = own?.url ? own : imgs.default?.url ? imgs.default : FALLBACK_PHOTO
+  return { url: pick.url, alt: pick.alt || FALLBACK_PHOTO.alt }
 })
 
 const ctaLabel = computed(() => (nextProject.value ? 'Next up' : isAbout.value ? 'See work' : 'About me'))
@@ -291,9 +304,10 @@ onBeforeUnmount(() => mm?.revert())
         </div>
 
         <div class="footer__photo">
-          <!-- Always the portrait — on project pages too, under "Next up". -->
+          <!-- Per-page image from Sanity (see `footerPhoto` above); case-study
+               pages use the default, under "Next up". -->
           <div class="footer__photo-frame">
-            <img src="/img/borges_hero.jpg" alt="Pedro Borges" />
+            <img :src="footerPhoto.url" :alt="footerPhoto.alt" />
           </div>
         </div>
 

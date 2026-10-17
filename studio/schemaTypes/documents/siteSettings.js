@@ -10,6 +10,7 @@ export default defineType({
   groups: [
     { name: 'general', title: 'General', default: true },
     { name: 'contact', title: 'Contact & socials' },
+    { name: 'footer', title: 'Footer' },
     { name: 'seo', title: 'Default SEO' },
   ],
   fields: [
@@ -75,6 +76,14 @@ export default defineType({
       title: 'Social links',
       group: 'contact',
       of: [{ type: 'socialLink' }],
+    }),
+
+    defineField({
+      name: 'footerImage',
+      type: 'footerImage',
+      title: 'Default footer image',
+      group: 'footer',
+      description: 'Used on case-study pages, and on Home / About / Work when their own footer image is empty.',
     }),
 
     defineField({ name: 'defaultSeo', type: 'seo', title: 'Default SEO', group: 'seo' }),
