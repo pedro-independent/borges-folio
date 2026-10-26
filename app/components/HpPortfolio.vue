@@ -62,7 +62,7 @@ const rowIs = (p) => (p.slug ? NuxtLink : 'article')
 const rowTo = (p) => (p.slug ? `/work/${p.slug}` : undefined)
 
 const title = computed(() => props.title || 'My portfolio')
-const cta = computed(() => props.cta || { label: 'View more projects', href: '#work' })
+const cta = computed(() => props.cta || { label: 'View more projects', href: '/work' })
 
 // Even rows: media left of centre, text right. Odd rows: text left, media right.
 const textRight = (i) => i % 2 === 0
