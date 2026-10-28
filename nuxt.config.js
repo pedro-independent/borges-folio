@@ -13,6 +13,12 @@ export default defineNuxtConfig({
     vue: { template: { transformAssetUrls: { includeAbsolute: false } } },
   },
 
+  // Unlisted site — keep every response (pages, images, videos) out of search
+  // engines. Pairs with the robots meta tag below; see server/routes/robots.txt.js.
+  routeRules: {
+    '/**': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
+  },
+
   // Sanity creds exposed to the client read-only via runtimeConfig.public.
   runtimeConfig: {
     // --- PRIVATE (server-only; never shipped to the browser) ---
@@ -31,8 +37,8 @@ export default defineNuxtConfig({
     contactFrom: 'Portfolio <onboarding@resend.dev>',
 
     public: {
-      // Production base URL — single source of truth for canonical tags, og:url,
-      // robots.txt and sitemap.xml. SET THIS before launch via the host env var
+      // Production base URL — single source of truth for canonical tags and
+      // og:url. SET THIS before launch via the host env var
       // NUXT_PUBLIC_SITE_URL (e.g. https://pedroborges.com). The placeholder
       // below is only a dev fallback and MUST be overridden in production.
       siteUrl: 'https://www.tortostudio.com/',
@@ -52,7 +58,11 @@ export default defineNuxtConfig({
       bodyAttrs: { 'data-page-theme': 'light', 'data-theme-nav': 'dark', 'data-bg-nav': 'light' },
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
-      meta: [{ name: 'theme-color', content: '#e8e4db' }],
+      meta: [
+        { name: 'theme-color', content: '#e8e4db' },
+        // Unlisted: shareable by URL, never shown in search results.
+        { name: 'robots', content: 'noindex, nofollow' },
+      ],
       // Filenames are case-sensitive on the deploy host (Linux) — match exactly.
       // Web-clip must be PNG (iOS ignores SVG apple-touch-icons); generated from
       // Webclip.svg. Legacy /favicon.svg kept as the guessed-path fallback.

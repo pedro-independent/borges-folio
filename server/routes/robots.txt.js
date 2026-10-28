@@ -1,16 +1,9 @@
-// robots.txt served dynamically so the Sitemap line always points at the live
-// domain (runtimeConfig.public.siteUrl / NUXT_PUBLIC_SITE_URL) without editing a
-// static file per environment. Allows all crawlers; everything is public.
+// The site is unlisted: reachable by URL only, kept out of search results.
+// Crawling stays ALLOWED on purpose — the actual block is the `noindex` meta tag
+// + X-Robots-Tag header (nuxt.config.js), and crawlers must be able to fetch a
+// page to see them. A `Disallow: /` here would hide the noindex, and Google can
+// still index a disallowed URL from external links. No Sitemap line either.
 export default defineEventHandler((event) => {
-  const { siteUrl } = useRuntimeConfig().public
-  const base = (siteUrl || '').replace(/\/$/, '')
-
   setHeader(event, 'Content-Type', 'text/plain; charset=utf-8')
-  return [
-    'User-agent: *',
-    'Allow: /',
-    '',
-    `Sitemap: ${base}/sitemap.xml`,
-    '',
-  ].join('\n')
+  return ['User-agent: *', 'Allow: /', ''].join('\n')
 })
